@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理画面 | スマホケース</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <!-- ログイン画面 -->
+  <div id="login-screen">
+    <div class="login-card">
+      <p class="login-logo">⬛ ADMIN</p>
+      <h1 class="login-title">管理者ログイン</h1>
+      <form id="login-form" autocomplete="off">
+        <input type="password" id="password-input" class="login-input"
+               placeholder="パスワード" autocomplete="current-password">
+        <button type="submit" class="login-btn">ログイン</button>
+      </form>
+      <p class="login-error" id="login-error">パスワードが違います</p>
+    </div>
+  </div>
+
+  <!-- 管理画面本体 -->
+  <div id="admin-screen" class="admin-screen" style="display:none;">
+
+    <header class="admin-header">
+      <span class="admin-logo">⬛ ADMIN</span>
+      <nav class="admin-tabs">
+        <button class="tab-btn active" data-tab="designs">デザイン一覧</button>
+        <button class="tab-btn" data-tab="models">機種マスター</button>
+      </nav>
+      <button id="logout-btn" class="logout-btn">ログアウト</button>
+    </header>
+
+    <!-- ── デザイン一覧タブ ── -->
+    <div id="tab-designs" class="tab-pane">
+      <div class="pane-toolbar">
+        <span class="record-count" id="designs-count"></span>
+        <button class="btn-sm" id="refresh-designs-btn">更新</button>
+      </div>
+      <div class="table-scroll">
+        <table class="admin-table" id="designs-table">
+          <thead>
+            <tr>
+              <th style="width:72px">プレビュー</th>
+              <th style="width:140px">作成日時</th>
+              <th>テキスト</th>
+              <th style="width:110px">背景色</th>
+              <th style="width:280px">出力設定</th>
+            </tr>
+          </thead>
+          <tbody id="designs-tbody"></tbody>
+        </table>
+      </div>
+      <p class="empty-msg" id="designs-empty" style="display:none;">保存されたデザインはありません</p>
+    </div>
+
+    <!-- ── 機種マスタータブ ── -->
+    <div id="tab-models" class="tab-pane" style="display:none;">
+      <div class="pane-toolbar">
+        <button class="btn-primary" id="add-model-btn">+ 機種を追加</button>
+      </div>
+
+      <!-- 追加フォーム -->
+      <div class="add-form" id="add-model-form" style="display:none;">
+        <h3 class="add-form-title">新しい機種を追加</h3>
+        <div class="add-form-grid">
+          <label class="form-field">
+            <span>機種名</span>
+            <input type="text" id="model-name" placeholder="iPhone 15">
+          </label>
+          <label class="form-field">
+            <span>スラグ</span>
+            <input type="text" id="model-slug" placeholder="iphone-15">
+          </label>
+          <label class="form-field">
+            <span>幅 (mm)</span>
+            <input type="number" id="model-width" step="0.1" min="0" placeholder="71.5">
+          </label>
+          <label class="form-field">
+            <span>高さ (mm)</span>
+            <input type="number" id="model-height" step="0.1" min="0" placeholder="155.7">
+          </label>
+          <label class="form-field">
+            <span>並び順</span>
+            <input type="number" id="model-sort" value="0">
+          </label>
+        </div>
+        <div class="add-form-actions">
+          <button class="btn-primary" id="submit-model-btn">追加する</button>
+          <button class="btn-ghost" id="cancel-model-btn">キャンセル</button>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="admin-table" id="models-table">
+          <thead>
+            <tr>
+              <th>機種名</th>
+              <th style="width:140px">スラグ</th>
+              <th style="width:90px">幅 (mm)</th>
+              <th style="width:90px">高さ (mm)</th>
+              <th style="width:70px">並び順</th>
+              <th style="width:160px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="models-tbody"></tbody>
+        </table>
+      </div>
+      <p class="empty-msg" id="models-empty" style="display:none;">機種が登録されていません</p>
+    </div>
+
+  </div><!-- /.admin-screen -->
+
+  <!-- トースト通知 -->
+  <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+  <script src="supabase.config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

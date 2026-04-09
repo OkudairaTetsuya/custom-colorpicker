@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>オリジナルケース|カラーシミュレーター</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style_wheel.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ヘッダー -->
+    <header class="app-header">
+      <h1 class="app-title">カラーシミュレーター</h1>
+    </header>
+
+    <!-- ── プレビュー ── -->
+    <div class="card preview-card">
+      <p class="preview-heading">プレビュー</p>
+
+      <!-- ベースカラー選択 -->
+      <div class="color-toggle">
+        <button class="toggle-btn active" id="toggle-BLK" data-color="BLK">
+          <span class="toggle-swatch" style="background:#1a1a1a;"></span>ブラック
+        </button>
+        <button class="toggle-btn" id="toggle-BGE" data-color="BGE">
+          <span class="toggle-swatch" style="background:#d4b896;"></span>ベージュ
+        </button>
+      </div>
+
+      <div class="preview-stage">
+        <div id="case-preview">
+          <div class="base-layer" id="base-layer"></div>
+          <img class="texture-layer" id="texture-layer" src="./images/texture.png" alt="" aria-hidden="true">
+          <img class="frame-layer" id="frame-layer" src="./images/BLK_frame.png" alt="" aria-hidden="true">
+        </div>
+      </div>
+
+      <p class="disclaimer">
+        ※ベースのケースカラーに影響を受けるため、画面上の色と仕上がりが異なる事があります。
+      </p>
+    </div>
+
+    <!-- ── カラーホイール ── -->
+    <div class="card picker-card">
+
+      <div class="picker-controls">
+
+        <!-- HEX 表示 -->
+        <div class="row-hex">
+          <div class="hex-chip" id="hex-chip"></div>
+          <span class="hex-label-text">HEX</span>
+          <code class="hex-code" id="hex-code">#3399FF</code>
+        </div>
+
+        <!-- コピーボタン -->
+        <button class="copy-btn" id="copy-btn" type="button">
+          カラーコードをコピー
+        </button>
+        <p class="copy-msg" id="copy-msg">カラーコードをコピーしました</p>
+
+        <!-- 明度スライダー -->
+        <div class="row-hue">
+          <span class="ctrl-label">明度</span>
+          <div class="hue-track">
+            <input type="range" id="value-slider" class="value-slider" min="0" max="100" value="90" step="1" aria-label="明度">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- カラーホイール本体 -->
+      <div class="wheel-stage">
+        <div class="color-wheel" id="color-wheel">
+          <div class="wheel-overlay" id="wheel-overlay"></div>
+          <div class="wheel-cursor" id="wheel-cursor"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="script_wheel.js"></script>
+</body>
+</html>

@@ -1,0 +1,410 @@
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   スマホケース カラーシミュレーター — style.css
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+img { display: block; }
+
+/* ── Design Tokens ── */
+:root {
+  --bg          : #ECEAE5;
+  --card        : #FFFFFF;
+  --text        : #1C1C1E;
+  --sub         : #6C6C70;
+  --muted       : #AEAEB2;
+  --border      : rgba(0, 0, 0, 0.08);
+  --light       : #F5F5F7;
+  --radius-card : 20px;
+  --radius-map  : 20px 20px 0 0;
+  --shadow-card : 0 2px 10px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-case : 0 0 0 1.5px rgba(0,0,0,0.14),
+                  0 16px 48px rgba(0,0,0,0.18),
+                  0 4px 12px rgba(0,0,0,0.08);
+  --font        : -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+                  'Yu Gothic', 'Meiryo', sans-serif;
+  --mono        : 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+}
+
+/* ── Base ── */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  font-family: var(--font);
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 48px;
+}
+
+/* ── App Wrapper ── */
+.app {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ── Header ── */
+.app-header {
+  padding: 36px 0 22px;
+  text-align: center;
+}
+.app-eyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.app-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 7px;
+}
+.app-desc {
+  font-size: 13px;
+  color: var(--sub);
+  line-height: 1.55;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SV マップ（彩度・明度）
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sv-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  border-radius: 0 0 20px 20px;
+  cursor: crosshair;
+  touch-action: none;        /* ドラッグ中のスクロールを抑制 */
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: background;   /* GPU レイヤー促進 */
+  /* 初期背景: script.js の render() が設定 */
+}
+
+/* カーソル（小さな丸） */
+.sv-cursor {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,0.32), 0 2px 8px rgba(0,0,0,0.22);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  will-change: left, top;
+}
+
+/* ── コントロールエリア ── */
+.picker-controls {
+  padding: 14px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   色相スライダー
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.row-hue {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ctrl-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: uppercase;
+  min-width: 28px;
+  flex-shrink: 0;
+}
+.hue-track {
+  flex: 1;
+}
+
+/* 虹色グラデーションバー */
+.hue-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 14px;
+  border-radius: 7px;
+  outline: none;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    hsl(  0, 100%, 50%),
+    hsl( 30, 100%, 50%),
+    hsl( 60, 100%, 50%),
+    hsl( 90, 100%, 50%),
+    hsl(120, 100%, 50%),
+    hsl(150, 100%, 50%),
+    hsl(180, 100%, 50%),
+    hsl(210, 100%, 50%),
+    hsl(240, 100%, 50%),
+    hsl(270, 100%, 50%),
+    hsl(300, 100%, 50%),
+    hsl(330, 100%, 50%),
+    hsl(360, 100%, 50%)
+  );
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.14);
+}
+
+/* WebKit thumb */
+.hue-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.28), 0 0 0 2px rgba(255,255,255,0.85);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.hue-slider:active::-webkit-slider-thumb {
+  transform: scale(1.18);
+}
+
+/* Firefox track */
+.hue-slider::-moz-range-track {
+  height: 14px;
+  border-radius: 7px;
+  border: none;
+  background: linear-gradient(
+    to right,
+    hsl(  0, 100%, 50%), hsl( 30, 100%, 50%), hsl( 60, 100%, 50%),
+    hsl( 90, 100%, 50%), hsl(120, 100%, 50%), hsl(150, 100%, 50%),
+    hsl(180, 100%, 50%), hsl(210, 100%, 50%), hsl(240, 100%, 50%),
+    hsl(270, 100%, 50%), hsl(300, 100%, 50%), hsl(330, 100%, 50%),
+    hsl(360, 100%, 50%)
+  );
+}
+/* Firefox thumb */
+.hue-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.28);
+  cursor: pointer;
+}
+
+/* ── コピーボタン ── */
+.copy-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: var(--text);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.copy-btn:active {
+  transform: scale(0.97);
+}
+
+.copy-msg {
+  font-size: 12px;
+  color: #2a9d5c;
+  text-align: center;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.copy-msg.visible {
+  opacity: 1;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HEX 表示行
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.row-hex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--light);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.hex-chip {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  /* background-color: JS が更新 */
+}
+.hex-label-text {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.hex-code {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  flex: 1;
+  text-align: right;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   プレビューカード
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.picker-card {
+  background: #ffffff;
+}
+
+.preview-card {
+  padding: 22px 18px 0;
+  background: #ffffff;
+}
+/* ── BLK / BGE トグル ── */
+.color-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.toggle-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 0;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--light);
+  color: var(--sub);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.toggle-btn.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
+}
+.toggle-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+
+.preview-heading {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 18px;
+}
+.preview-stage {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ケースプレビュー（3レイヤー構造）
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#case-preview {
+  position: relative;
+  /*
+    表示サイズ: 300 × 600 px が基本
+    画像素材  : 600 × 1200 px（Retina 2x）
+    小画面対応: clamp で画面幅に合わせて縮小
+  */
+  width:  clamp(143px, 52vw, 195px);
+  height: clamp(286px, 104vw, 390px);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+/* Layer 1: ベースカラー */
+.base-layer {
+  position: absolute;
+  inset: 0;
+  will-change: background-color;
+  /* background-color: script.js が更新 */
+}
+
+/*
+  Layer 2: 質感レイヤー（texture.png）
+  ─ mix-blend-mode: multiply
+    白い部分は透過（影響なし）、暗い部分でベースカラーを締める
+  ─ ハイライトは白半透明で表現（multiply のため明るくはならない点に注意）
+    → ハイライトは overlay に変更するか、別レイヤーに分けることも可能
+*/
+.texture-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/*
+  Layer 3: 外枠・固定パーツ（frame.png）
+  ─ 通常合成（mix-blend-mode: normal）で最前面に常時表示
+  ─ カメラ穴、ケースエッジ、ロゴなど色が変わらない要素
+*/
+.frame-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: normal;
+  pointer-events: none;
+}
+
+/* ── 免責注記 ── */
+.disclaimer {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.65;
+  padding: 14px 0 18px;
+}

@@ -1,0 +1,124 @@
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   カラーホイール追加スタイル — style_wheel.css
+   style.css と併用してください
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ── ホイールステージ ── */
+.wheel-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0 28px;
+}
+
+/* ── カラーホイール本体 ── */
+.color-wheel {
+  position: relative;
+  width:  min(260px, 74vw);
+  height: min(260px, 74vw);
+  border-radius: 50%;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  /*
+    Layer 1 (最背面): conic-gradient で 0°〜360° の純粋な Hue を配置
+      0deg = 12時方向 (上) = Hue 0°(赤) → 時計回り
+    Layer 2 (前面): radial-gradient で中心(白)→外周(透明)
+      中心 S=0 (白), 外周 S=1 (純粋なHue色)
+  */
+  background:
+    radial-gradient(circle, #fff 0%, transparent 100%),
+    conic-gradient(from 0deg,
+      hsl(  0, 100%, 50%),
+      hsl( 30, 100%, 50%),
+      hsl( 60, 100%, 50%),
+      hsl( 90, 100%, 50%),
+      hsl(120, 100%, 50%),
+      hsl(150, 100%, 50%),
+      hsl(180, 100%, 50%),
+      hsl(210, 100%, 50%),
+      hsl(240, 100%, 50%),
+      hsl(270, 100%, 50%),
+      hsl(300, 100%, 50%),
+      hsl(330, 100%, 50%),
+      hsl(360, 100%, 50%)
+    );
+  box-shadow: 0 2px 16px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+}
+
+/*
+  明度オーバーレイ:
+  黒い半透明レイヤーを重ねることで明度 (Value) を表現。
+  opacity = 1 - V  (JS が更新)
+*/
+.wheel-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* カーソル（選択位置の丸） */
+.wheel-cursor {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,0.32), 0 2px 8px rgba(0,0,0,0.22);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  will-change: left, top;
+}
+
+/* ── 明度スライダー ── */
+/*
+  background は JS で動的に更新:
+  linear-gradient(to right, #000, hsl(H, 100%, 50%))
+*/
+.value-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 14px;
+  border-radius: 7px;
+  outline: none;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(to right, #000, #fff); /* 初期値: JS が上書き */
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.14);
+}
+.value-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.28), 0 0 0 2px rgba(255,255,255,0.85);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.value-slider:active::-webkit-slider-thumb {
+  transform: scale(1.18);
+}
+.value-slider::-moz-range-track {
+  height: 14px;
+  border-radius: 7px;
+  border: none;
+  background: linear-gradient(to right, #000, #fff);
+}
+.value-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.28);
+  cursor: pointer;
+}

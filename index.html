@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>オリジナルケース|カラーシミュレーター </title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ヘッダー -->
+    <header class="app-header">
+      <h1 class="app-title">カラーシミュレーター</h1>
+    </header>
+
+    <!-- ── プレビュー ── -->
+    <div class="card preview-card">
+      <p class="preview-heading">プレビュー</p>
+
+      <!-- ベースカラー選択 -->
+      <div class="color-toggle">
+        <button class="toggle-btn active" id="toggle-BLK" data-color="BLK">
+          <span class="toggle-swatch" style="background:#1a1a1a;"></span>ブラック
+        </button>
+        <button class="toggle-btn" id="toggle-BGE" data-color="BGE">
+          <span class="toggle-swatch" style="background:#d4b896;"></span>ベージュ
+        </button>
+      </div>
+
+      <div class="preview-stage">
+
+        <div id="case-preview">
+          <!-- Layer 1: ベースカラー（JS が background-color を更新） -->
+          <div class="base-layer" id="base-layer"></div>
+          <!-- Layer 2: 質感（shadow/gloss） mix-blend-mode: multiply -->
+          <img class="texture-layer" id="texture-layer" src="./images/texture.png" alt="" aria-hidden="true">
+          <!-- Layer 3: 外枠・固定パーツ（最前面） -->
+          <img class="frame-layer" id="frame-layer" src="./images/BLK_frame.png" alt="" aria-hidden="true">
+        </div>
+      </div>
+
+      <p class="disclaimer">
+        ※ベースのケースカラーに影響を受けるため、画面上の色と仕上がりが異なる事があります。
+      </p>
+    </div><!-- /.preview-card -->
+
+    <!-- ── カラーピッカー ── -->
+    <div class="card picker-card">
+
+      <!-- コントロール -->
+      <div class="picker-controls">
+
+        <!-- 色相スライダー -->
+        <div class="row-hue">
+          <span class="ctrl-label">色相</span>
+          <div class="hue-track">
+            <input type="range" id="hue-slider" class="hue-slider" min="0" max="360" value="200" step="1" aria-label="色相">
+          </div>
+        </div>
+
+        <!-- HEX 表示 -->
+        <div class="row-hex">
+          <div class="hex-chip" id="hex-chip"></div>
+          <span class="hex-label-text">HEX</span>
+          <code class="hex-code" id="hex-code">#3399FF</code>
+        </div>
+
+        <!-- コピーボタン -->
+        <button class="copy-btn" id="copy-btn" type="button">
+          カラーコードをコピー
+        </button>
+        <p class="copy-msg" id="copy-msg">カラーコードをコピーしました</p>
+
+      </div>
+
+      <!-- SV マップ（彩度・明度） -->
+      <!-- 横方向: Saturation 0→1（左→右）  縦方向: Value 1→0（上→下） -->
+      <div class="sv-map" id="sv-map" aria-label="彩度・明度選択エリア">
+        <div class="sv-cursor" id="sv-cursor"></div>
+      </div>
+
+    </div><!-- /.picker-card -->
+
+  </div><!-- /.app -->
+
+  <script src="script.js"></script>
+</body>
+</html>
