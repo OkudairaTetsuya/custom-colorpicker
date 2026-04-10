@@ -52,7 +52,10 @@
   var tcHexCode  = document.getElementById('tc-hex-code');
 
   var textInput  = document.getElementById('text-input');
-  var fontSelect = document.getElementById('font-select');
+  var fontPicker      = document.getElementById('font-picker');
+  var fontPickerTrigger = document.getElementById('font-picker-trigger');
+  var fontPickerLabel = document.getElementById('font-picker-label');
+  var fontPickerList  = document.getElementById('font-picker-list');
   var fontSizeEl = document.getElementById('font-size');
   var sizeBadge  = document.getElementById('size-badge');
 
@@ -313,15 +316,37 @@
   textInput.addEventListener('input', function () { updateText(this.value); });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     フォント
+     フォントピッカー
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  fontSelect.addEventListener('change', function () {
-    currentFont = this.value;
+  function selectFont(value, label) {
+    currentFont = value;
+    fontPickerLabel.textContent = label;
+    fontPicker.classList.remove('open');
+    document.querySelectorAll('.font-picker-option').forEach(function (opt) {
+      opt.classList.toggle('selected', opt.dataset.value === value);
+    });
     if (!activeText) return;
-    document.fonts.load('700 1em "' + currentFont + '"').then(function () {
+    document.fonts.load('400 1em "' + currentFont + '"').then(function () {
       activeText.set('fontFamily', currentFont);
       canvas.renderAll();
     });
+  }
+
+  fontPickerTrigger.addEventListener('click', function () {
+    fontPicker.classList.toggle('open');
+  });
+
+  document.querySelectorAll('.font-picker-option').forEach(function (opt) {
+    opt.addEventListener('click', function () {
+      selectFont(this.dataset.value, this.dataset.label);
+    });
+  });
+
+  /* ピッカー外クリックで閉じる */
+  document.addEventListener('click', function (e) {
+    if (!fontPicker.contains(e.target)) {
+      fontPicker.classList.remove('open');
+    }
   });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -575,7 +600,8 @@
         currentFont        = data.font_family || 'Roboto';
         currentSize        = data.font_size   || 36;
         textInput.value    = data.text_value  || '';
-        fontSelect.value   = currentFont;
+        var restoredOpt = fontPickerList.querySelector('[data-value="' + currentFont + '"]');
+        if (restoredOpt) selectFont(currentFont, restoredOpt.dataset.label);
         fontSizeEl.value   = currentSize;
         sizeBadge.textContent = currentSize;
 

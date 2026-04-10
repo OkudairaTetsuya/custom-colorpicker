@@ -66,15 +66,36 @@
                 <label class="ctrl-label" for="text-input">テキスト</label>
                 <input type="text" id="text-input" class="np-text-input" placeholder="名前やメッセージを入力…" maxlength="30">
               </div>
-              <div class="np-row">
-                <label class="ctrl-label" for="font-select">フォント</label>
-                <select id="font-select" class="np-select">
-                  <option value="Roboto">ゴシック体</option>
-                  <option value="Sacramento">丸筆記体</option>
-                  <option value="Alex Brush">筆記体</option>
-                  <option value="Noto Serif JP">明朝体（日本語・ハングル対応）</option>
-                  <option value="Noto Sans">シンプルゴシック体（日本語・ハングル対応）</option>
-                </select>
+              <div class="np-row np-row-font">
+                <span class="ctrl-label">フォント</span>
+                <div class="font-picker" id="font-picker">
+                  <button type="button" class="font-picker-trigger" id="font-picker-trigger">
+                    <span class="font-picker-label" id="font-picker-label">ゴシック体</span>
+                    <svg class="font-picker-chevron" viewBox="0 0 12 8" fill="none" stroke="#AEAEB2" stroke-width="1.5" stroke-linecap="round"><path d="M1 1l5 5 5-5"/></svg>
+                  </button>
+                  <ul class="font-picker-list" id="font-picker-list" role="listbox">
+                    <li class="font-picker-option" data-value="Roboto" data-label="ゴシック体" role="option">
+                      <span class="fpo-name">ゴシック体</span>
+                      <span class="fpo-preview" style="font-family:'Roboto',sans-serif;">ABCabc123</span>
+                    </li>
+                    <li class="font-picker-option" data-value="Sacramento" data-label="丸筆記体" role="option">
+                      <span class="fpo-name">丸筆記体</span>
+                      <span class="fpo-preview" style="font-family:'Sacramento',cursive;">ABCabc123</span>
+                    </li>
+                    <li class="font-picker-option" data-value="Alex Brush" data-label="筆記体" role="option">
+                      <span class="fpo-name">筆記体</span>
+                      <span class="fpo-preview" style="font-family:'Alex Brush',cursive;">ABCabc123</span>
+                    </li>
+                    <li class="font-picker-option" data-value="Noto Serif JP" data-label="明朝体（日本語・ハングル対応）" role="option">
+                      <span class="fpo-name">明朝体（日本語・ハングル対応）</span>
+                      <span class="fpo-preview" style="font-family:'Noto Serif JP',serif;">ABCabc123</span>
+                    </li>
+                    <li class="font-picker-option" data-value="Noto Sans" data-label="シンプルゴシック体（日本語・ハングル対応）" role="option">
+                      <span class="fpo-name">シンプルゴシック体（日本語・ハングル対応）</span>
+                      <span class="fpo-preview" style="font-family:'Noto Sans',sans-serif;">ABCabc123</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
               <div class="np-row np-row-slider">
                 <span class="ctrl-label">サイズ</span>
