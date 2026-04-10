@@ -6,7 +6,24 @@
    機種選択ドロップダウン
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .model-select-row {
+  margin-bottom: 10px;
+}
+
+.case-color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 12px;
+}
+.case-color-row .ctrl-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted, #8E8E93);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.case-color-row .color-toggle {
+  flex: 1;
 }
 
 .model-select-dropdown {

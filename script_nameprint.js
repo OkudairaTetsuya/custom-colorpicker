@@ -768,7 +768,7 @@
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
   /* 右カラム: 排他的アコーディオン（常に1つだけ開く） */
-  var exclusiveIds = ['body-text', 'body-png', 'body-bgcolor'];
+  var exclusiveIds = ['body-text', 'body-bgcolor'];
 
   function openExclusive(targetId) {
     exclusiveIds.forEach(function (id) {
