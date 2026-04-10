@@ -612,11 +612,46 @@
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      アコーディオン
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  document.querySelectorAll('.ac-header').forEach(function (header) {
-    header.addEventListener('click', function () {
-      var body   = document.getElementById(this.dataset.target);
-      var isOpen = this.classList.contains('open');
 
+  /* 右カラム: 排他的アコーディオン（常に1つだけ開く） */
+  var exclusiveIds = ['body-text', 'body-layout', 'body-bgcolor'];
+
+  function openExclusive(targetId) {
+    exclusiveIds.forEach(function (id) {
+      var body   = document.getElementById(id);
+      var header = document.querySelector('[data-target="' + id + '"]');
+      if (!body || !header) return;
+      if (id === targetId) {
+        body.style.maxHeight = body.scrollHeight + 'px';
+        header.classList.add('open');
+        body.addEventListener('transitionend', function onEnd() {
+          body.style.maxHeight = 'none';
+          body.removeEventListener('transitionend', onEnd);
+        });
+      } else {
+        body.style.maxHeight = body.scrollHeight + 'px';
+        requestAnimationFrame(function () { body.style.maxHeight = '0'; });
+        header.classList.remove('open');
+      }
+    });
+  }
+
+  exclusiveIds.forEach(function (id) {
+    var header = document.querySelector('[data-target="' + id + '"]');
+    if (!header) return;
+    header.addEventListener('click', function () {
+      if (this.classList.contains('open')) return; /* 既に開いていれば何もしない */
+      openExclusive(id);
+    });
+  });
+
+  /* プレビュー: 単独トグル（排他グループ外） */
+  (function () {
+    var header = document.querySelector('[data-target="body-preview"]');
+    if (!header) return;
+    header.addEventListener('click', function () {
+      var body   = document.getElementById('body-preview');
+      var isOpen = this.classList.contains('open');
       if (isOpen) {
         body.style.maxHeight = body.scrollHeight + 'px';
         requestAnimationFrame(function () { body.style.maxHeight = '0'; });
@@ -624,27 +659,28 @@
       } else {
         body.style.maxHeight = body.scrollHeight + 'px';
         header.classList.add('open');
-        var targetId = this.dataset.target;
         body.addEventListener('transitionend', function onEnd() {
           body.style.maxHeight = 'none';
           body.removeEventListener('transitionend', onEnd);
-          if (targetId === 'body-preview') scaleCanvas();
+          scaleCanvas();
         });
       }
     });
-  });
+  })();
 
-  /* 初期状態: プレビューのみ開く（transition なしで即展開） */
+  /* 初期状態: プレビューとテキスト設定を即展開 */
   (function () {
-    var body   = document.getElementById('body-preview');
-    var header = document.querySelector('[data-target="body-preview"]');
-    if (!body || !header) return;
-    body.style.transition = 'none';
-    body.style.maxHeight  = 'none';
-    header.classList.add('open');
-    requestAnimationFrame(function () {
-      body.style.transition = '';
-      scaleCanvas();
+    ['body-preview', 'body-text'].forEach(function (id) {
+      var body   = document.getElementById(id);
+      var header = document.querySelector('[data-target="' + id + '"]');
+      if (!body || !header) return;
+      body.style.transition = 'none';
+      body.style.maxHeight  = 'none';
+      header.classList.add('open');
+      requestAnimationFrame(function () {
+        body.style.transition = '';
+        if (id === 'body-preview') scaleCanvas();
+      });
     });
   })();
 
