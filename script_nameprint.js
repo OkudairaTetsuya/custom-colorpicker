@@ -146,31 +146,11 @@
     if (textureObj) { canvas.remove(textureObj); textureObj = null; }
     if (frameObj)   { canvas.remove(frameObj);   frameObj   = null; }
 
-    var loaded = 0;
-    function onLoad() {
-      if (++loaded === 2) {
-        canvas.bringToFront(textureObj);
-        canvas.bringToFront(frameObj);
-        canvas.renderAll();
-      }
-    }
-
-    fabric.Image.fromURL('./images/texture.png', function (img) {
-      img.set({
-        left: 0, top: 0,
-        scaleX: CANVAS_W / img.width,
-        scaleY: CANVAS_H / img.height,
-        selectable: false, evented: false,
-        globalCompositeOperation: 'multiply',
-      });
-      canvas.add(img);
-      textureObj = img;
-      onLoad();
-    });
-
     var frameUrl = currentModel
       ? './images/' + currentModel.slug + '_' + baseColor + '.png'
-      : './images/' + baseColor + '_frame.png';
+      : null;
+
+    if (!frameUrl) return;
 
     fabric.Image.fromURL(frameUrl, function (img) {
       img.set({
@@ -182,7 +162,8 @@
       });
       canvas.add(img);
       frameObj = img;
-      onLoad();
+      canvas.bringToFront(frameObj);
+      canvas.renderAll();
     });
   }
 
@@ -375,7 +356,7 @@
         editable  : false,
         textAlign : 'center',
       });
-      var idx = textureObj ? canvas.getObjects().indexOf(textureObj) : canvas.getObjects().length;
+      var idx = frameObj ? canvas.getObjects().indexOf(frameObj) : canvas.getObjects().length;
       canvas.insertAt(activeText, Math.max(0, idx));
       canvas.setActiveObject(activeText);
     }
@@ -385,8 +366,7 @@
   function updateText(text) {
     var t = ensureText(text);
     t.set('text', text);
-    if (textureObj) canvas.bringToFront(textureObj);
-    if (frameObj)   canvas.bringToFront(frameObj);
+    if (frameObj) canvas.bringToFront(frameObj);
     canvas.renderAll();
   }
 
@@ -498,10 +478,9 @@
       editable  : false,
       textAlign : 'center',
     });
-    var idx = textureObj ? canvas.getObjects().indexOf(textureObj) : canvas.getObjects().length;
+    var idx = frameObj ? canvas.getObjects().indexOf(frameObj) : canvas.getObjects().length;
     canvas.insertAt(newText, Math.max(0, idx));
-    if (textureObj) canvas.bringToFront(textureObj);
-    if (frameObj)   canvas.bringToFront(frameObj);
+    if (frameObj) canvas.bringToFront(frameObj);
     canvas.setActiveObject(newText);
     canvas.renderAll();
     activeText = newText;
@@ -789,7 +768,7 @@
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
   /* 右カラム: 排他的アコーディオン（常に1つだけ開く） */
-  var exclusiveIds = ['body-text', 'body-bgcolor'];
+  var exclusiveIds = ['body-text', 'body-png', 'body-bgcolor'];
 
   function openExclusive(targetId) {
     exclusiveIds.forEach(function (id) {
