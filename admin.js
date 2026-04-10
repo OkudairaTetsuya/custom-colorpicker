@@ -223,7 +223,7 @@
   function loadModels(thenDesigns) {
     return sb.from('case_models')
       .select('*')
-      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true })
       .then(function (res) {
         if (res.error) { showToast('機種取得失敗: ' + res.error.message, 'error'); return; }
         cachedModels = res.data || [];
@@ -261,7 +261,6 @@
       eCell(m.slug,        'slug'),
       eCell(m.width_mm,    'width_mm',    'number'),
       eCell(m.height_mm,   'height_mm',   'number'),
-      eCell(m.sort_order,  'sort_order',  'number'),
     ];
 
     /* 操作 */
@@ -355,12 +354,10 @@
     var slug   = modelSlugEl.value.trim();
     var width  = parseFloat(modelWidthEl.value);
     var height = parseFloat(modelHeightEl.value);
-    var sort   = parseInt(modelSortEl.value, 10) || 0;
-
     if (!name || !slug || isNaN(width) || isNaN(height)) {
       showToast('全ての項目を入力してください', 'error'); return;
     }
-    sb.from('case_models').insert({ name: name, slug: slug, width_mm: width, height_mm: height, sort_order: sort })
+    sb.from('case_models').insert({ name: name, slug: slug, width_mm: width, height_mm: height })
       .then(function (res) {
         if (res.error) { showToast('追加失敗: ' + res.error.message, 'error'); return; }
         showToast(name + ' を追加しました');
