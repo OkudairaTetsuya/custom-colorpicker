@@ -97,6 +97,36 @@
     enableRetinaScaling   : true,
   });
 
+  /* テキスト選択時にコントロールを同期 */
+  function syncControlsToText(textObj) {
+    activeText = textObj;
+    textInput.value = textObj.text || '';
+    currentFont = textObj.fontFamily || 'Roboto';
+    currentSize = textObj.fontSize  || 36;
+    fontSizeEl.value          = currentSize;
+    sizeBadge.textContent     = currentSize;
+    var opt = fontPickerList.querySelector('[data-value="' + currentFont + '"]');
+    fontPickerLabel.textContent = opt ? opt.dataset.label : currentFont;
+    document.querySelectorAll('.font-picker-option').forEach(function (o) {
+      o.classList.toggle('selected', o.dataset.value === currentFont);
+    });
+    var fill = textObj.fill || '#FFFFFF';
+    if (!/^#[0-9a-fA-F]{6}$/.test(fill)) fill = '#FFFFFF';
+    var hsv = hexToHsv(fill);
+    tcHue = hsv[0]; tcSat = hsv[1]; tcVal = hsv[2];
+    tcHueSl.value = Math.round(tcHue);
+    renderTc();
+  }
+
+  canvas.on('selection:created', function (e) {
+    var obj = e.selected && e.selected[0];
+    if (obj && (obj.type === 'i-text' || obj.type === 'text')) syncControlsToText(obj);
+  });
+  canvas.on('selection:updated', function (e) {
+    var obj = e.selected && e.selected[0];
+    if (obj && (obj.type === 'i-text' || obj.type === 'text')) syncControlsToText(obj);
+  });
+
   /* レスポンシブスケーリング */
   function scaleCanvas() {
     var available = canvasStage.clientWidth;
@@ -402,6 +432,45 @@
   });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     テキスト追加 / 削除
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  document.getElementById('add-text-btn').addEventListener('click', function () {
+    var existingTexts = canvas.getObjects().filter(function (o) {
+      return o.type === 'i-text' || o.type === 'text';
+    });
+    var offset = existingTexts.length * 70;
+    var newText = new fabric.IText('', {
+      left      : CANVAS_W / 2,
+      top       : Math.min(CANVAS_H / 2 + offset, CANVAS_H - 70),
+      originX   : 'center',
+      originY   : 'center',
+      fontFamily: currentFont,
+      fontSize  : currentSize,
+      fill      : currentTextColor(),
+      selectable: true,
+      editable  : false,
+      textAlign : 'center',
+    });
+    var idx = textureObj ? canvas.getObjects().indexOf(textureObj) : canvas.getObjects().length;
+    canvas.insertAt(newText, Math.max(0, idx));
+    if (textureObj) canvas.bringToFront(textureObj);
+    if (frameObj)   canvas.bringToFront(frameObj);
+    canvas.setActiveObject(newText);
+    canvas.renderAll();
+    activeText = newText;
+    textInput.value = '';
+    textInput.focus();
+  });
+
+  document.getElementById('del-text-btn').addEventListener('click', function () {
+    if (!activeText) return;
+    canvas.remove(activeText);
+    activeText = null;
+    textInput.value = '';
+    canvas.renderAll();
+  });
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      コピーボタン（背景色HEX）
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   var copyTimer = null;
@@ -598,7 +667,7 @@
           activeText = null; textureObj = null; frameObj = null;
           canvas.getObjects().forEach(function (obj) {
             if (obj.type === 'i-text' || obj.type === 'text') {
-              activeText = obj;
+              if (!activeText) activeText = obj; /* 最初のテキストをアクティブに */
             } else if (obj.type === 'image') {
               if (obj.globalCompositeOperation === 'multiply') {
                 textureObj = obj;
@@ -607,6 +676,7 @@
               }
             }
           });
+          if (activeText) syncControlsToText(activeText);
           canvas.renderAll();
           showLoadOverlay(false);
         });

@@ -329,6 +329,17 @@
   color: #fff;
   border-color: var(--text);
 }
+.align-btn-danger {
+  border-color: rgba(255,59,48,0.35);
+  color: #FF3B30;
+}
+.align-btn-danger:active {
+  background: #FF3B30;
+  border-color: #FF3B30;
+  color: #fff;
+}
+.text-layer-btns { gap: 8px; }
+.text-layer-btns .align-btn { flex: 1; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    PC 2カラムレイアウト
