@@ -13,25 +13,11 @@
 </head>
 <body>
 
-  <!-- ① 機種選択画面 -->
-  <div id="model-select-screen">
-    <div class="app">
-      <header class="app-header">
-        <h1 class="app-title">機種を選択</h1>
-        <p class="app-desc">カスタマイズするスマホケースの機種を選んでください</p>
-      </header>
-      <div class="model-list" id="model-list"></div>
-      <p class="model-loading" id="model-loading">読み込み中…</p>
-    </div>
-  </div>
-
-  <!-- ② メインカスタマイザー -->
-  <div id="main-app" style="display:none;">
+  <div id="main-app">
   <div class="app">
 
     <header class="app-header">
       <h1 class="app-title">名入れカスタマイズ</h1>
-      <p class="app-desc" id="app-model-name"></p>
     </header>
 
     <div class="pc-layout">
@@ -45,6 +31,13 @@
           </button>
           <div class="ac-body" id="body-preview">
             <div class="ac-inner">
+              <!-- 機種選択ドロップダウン -->
+              <div class="model-select-row">
+                <select id="model-select" class="model-select-dropdown">
+                  <option value="">— 機種を選択 —</option>
+                </select>
+              </div>
+
               <div class="color-toggle">
                 <button class="toggle-btn active" id="toggle-BLK" data-color="BLK">
                   <span class="toggle-swatch" style="background:#1a1a1a;"></span>ブラック
@@ -56,6 +49,11 @@
               <div class="canvas-stage" id="canvas-stage">
                 <div class="canvas-wrap" id="canvas-wrap">
                   <canvas id="main-canvas"></canvas>
+                </div>
+                <!-- 未選択プレースホルダー -->
+                <div class="canvas-placeholder" id="canvas-placeholder">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="#C7C7CC" stroke="none"/></svg>
+                  <p>機種を選択してください</p>
                 </div>
               </div>
               <p class="disclaimer">

@@ -3,54 +3,56 @@
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   機種選択画面
+   機種選択ドロップダウン
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.model-list {
+.model-select-row {
+  margin-bottom: 12px;
+}
+
+.model-select-dropdown {
+  width: 100%;
+  height: 42px;
+  padding: 0 32px 0 14px;
+  border: 1.5px solid var(--border, #E5E5EA);
+  border-radius: 10px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text, #1C1C1E);
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23AEAEB2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color 0.15s;
+}
+.model-select-dropdown:focus { border-color: var(--blue, #007AFF); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   キャンバス 未選択プレースホルダー
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#canvas-stage { position: relative; }
+
+.canvas-placeholder {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 0 16px 40px;
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-.model-card {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 18px 20px;
-  background: var(--card, #fff);
-  border: 1.5px solid var(--border, #E5E5EA);
-  border-radius: 14px;
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  font-family: var(--font);
+  justify-content: center;
+  gap: 12px;
+  background: rgba(242,242,247,0.92);
+  border-radius: 12px;
+  z-index: 10;
+  pointer-events: none;
 }
-.model-card:hover {
-  border-color: var(--text, #1C1C1E);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-}
-.model-card:active { opacity: 0.8; }
-
-.model-card-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text, #1C1C1E);
-}
-
-.model-card-size {
-  font-size: 12px;
-  color: var(--muted, #8E8E93);
-  font-weight: 500;
-}
-
-.model-loading {
-  text-align: center;
-  color: var(--muted, #8E8E93);
-  font-size: 13px;
-  padding: 40px 16px;
+.canvas-placeholder p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #8E8E93;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━

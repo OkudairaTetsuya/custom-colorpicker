@@ -189,9 +189,9 @@
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      機種選択
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  var modelSelectScreen = document.getElementById('model-select-screen');
-  var mainApp           = document.getElementById('main-app');
-  var appModelName      = document.getElementById('app-model-name');
+  var modelSelectEl   = document.getElementById('model-select');
+  var canvasPlaceholder = document.getElementById('canvas-placeholder');
+  var modelMap        = {}; /* id → model オブジェクト */
 
   function applyModel(model) {
     currentModel = model;
@@ -201,49 +201,31 @@
     canvas.setWidth(w);
     canvas.setHeight(h);
     loadImages(currentBase);
-  }
-
-  function showMainApp(model) {
-    applyModel(model);
-    appModelName.textContent = model.name + '  ' + model.width_mm + ' × ' + model.height_mm + ' mm';
-    modelSelectScreen.style.display = 'none';
-    mainApp.style.display = 'block';
+    canvasPlaceholder.style.display = 'none';
     scaleCanvas();
     renderBg();
     renderTc();
   }
 
+  modelSelectEl.addEventListener('change', function () {
+    var model = modelMap[this.value];
+    if (model) applyModel(model);
+    else canvasPlaceholder.style.display = 'flex';
+  });
+
   function loadModelList() {
-    var listEl    = document.getElementById('model-list');
-    var loadingEl = document.getElementById('model-loading');
-    if (!supabaseClient) {
-      loadingEl.textContent = '機種データを読み込めません（Supabase未設定）';
-      return;
-    }
+    if (!supabaseClient) return;
     supabaseClient.from('case_models')
       .select('*')
       .order('name', { ascending: true })
       .then(function (res) {
-        loadingEl.style.display = 'none';
-        if (res.error) {
-          loadingEl.style.display = 'block';
-          loadingEl.textContent = '読み込みに失敗しました: ' + res.error.message;
-          return;
-        }
-        var models = res.data || [];
-        if (!models.length) {
-          loadingEl.style.display = 'block';
-          loadingEl.textContent = '機種が登録されていません。管理画面から追加してください。';
-          return;
-        }
-        models.forEach(function (m) {
-          var card = document.createElement('button');
-          card.className = 'model-card';
-          card.innerHTML =
-            '<span class="model-card-name">' + m.name + '</span>' +
-            '<span class="model-card-size">' + m.width_mm + ' × ' + m.height_mm + ' mm</span>';
-          card.addEventListener('click', function () { showMainApp(m); });
-          listEl.appendChild(card);
+        if (res.error || !res.data) return;
+        res.data.forEach(function (m) {
+          modelMap[m.id] = m;
+          var opt = document.createElement('option');
+          opt.value       = m.id;
+          opt.textContent = m.name + '  (' + m.width_mm + ' × ' + m.height_mm + ' mm)';
+          modelSelectEl.appendChild(opt);
         });
       });
   }
@@ -716,8 +698,6 @@
     }
 
     showLoadOverlay(true);
-    modelSelectScreen.style.display = 'none';
-    mainApp.style.display = 'block';
 
     supabaseClient
       .from('designs')
@@ -732,7 +712,12 @@
         /* 機種を復元してキャンバスサイズを設定 */
         var modelPromise = data.model_id
           ? supabaseClient.from('case_models').select('*').eq('id', data.model_id).single()
-              .then(function (mr) { if (!mr.error && mr.data) applyModel(mr.data); })
+              .then(function (mr) {
+                if (!mr.error && mr.data) {
+                  applyModel(mr.data);
+                  modelSelectEl.value = mr.data.id;
+                }
+              })
           : Promise.resolve();
 
         return modelPromise.then(function () {
@@ -796,8 +781,6 @@
         console.error('loadDesign error:', err);
         showError('デザインの読み込みに失敗しました：' + (err.message || '通信エラー'));
         showLoadOverlay(false);
-        modelSelectScreen.style.display = 'block';
-        mainApp.style.display = 'none';
       });
   }
 
@@ -885,12 +868,9 @@
   renderBg();
   renderTc();
 
-  /* URLにidが含まれている場合は復元、なければ機種選択 */
-  var urlId = new URLSearchParams(location.search).get('id');
-  if (urlId) {
-    loadDesignFromUrl();
-  } else {
-    loadModelList();
-  }
+  /* 機種リスト読み込み（常時） */
+  loadModelList();
+  /* URLにidが含まれている場合はデザイン復元 */
+  if (new URLSearchParams(location.search).get('id')) loadDesignFromUrl();
 
 }());
