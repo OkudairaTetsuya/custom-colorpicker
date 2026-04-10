@@ -205,7 +205,7 @@
           modelMap[m.id] = m;
           var opt = document.createElement('option');
           opt.value       = m.id;
-          opt.textContent = m.name + '  (' + m.width_mm + ' × ' + m.height_mm + ' mm)';
+          opt.textContent = m.name;
           modelSelectEl.appendChild(opt);
         });
       });
