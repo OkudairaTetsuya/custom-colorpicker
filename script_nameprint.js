@@ -386,6 +386,22 @@
   });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     回転ボタン
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  document.getElementById('rotate-cw').addEventListener('click', function () {
+    if (!activeText) return;
+    activeText.rotate((activeText.angle + 90) % 360);
+    activeText.setCoords();
+    canvas.renderAll();
+  });
+  document.getElementById('rotate-ccw').addEventListener('click', function () {
+    if (!activeText) return;
+    activeText.rotate((activeText.angle - 90 + 360) % 360);
+    activeText.setCoords();
+    canvas.renderAll();
+  });
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      コピーボタン（背景色HEX）
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   var copyTimer = null;
