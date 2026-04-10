@@ -309,7 +309,7 @@
 .align-btns {
   display: flex;
   gap: 8px;
-  margin-bottom: 14px;
+  flex: 1;
 }
 .align-btn {
   flex: 1;
