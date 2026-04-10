@@ -3,87 +3,190 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>オリジナルケース|カラーシミュレーター </title>
+  <title>名入れカスタマイズ | スマホケース</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style_nameprint.css">
 </head>
 <body>
   <div class="app">
 
-    <!-- ヘッダー -->
     <header class="app-header">
-      <h1 class="app-title">カラーシミュレーター</h1>
+      <h1 class="app-title">名入れカスタマイズ</h1>
+      <p class="app-desc">テキストを追加してオリジナルケースをデザイン</p>
     </header>
 
-    <!-- ── プレビュー ── -->
-    <div class="card preview-card">
-      <p class="preview-heading">プレビュー</p>
+    <div class="pc-layout">
 
-      <!-- ベースカラー選択 -->
-      <div class="color-toggle">
-        <button class="toggle-btn active" id="toggle-BLK" data-color="BLK">
-          <span class="toggle-swatch" style="background:#1a1a1a;"></span>ブラック
-        </button>
-        <button class="toggle-btn" id="toggle-BGE" data-color="BGE">
-          <span class="toggle-swatch" style="background:#d4b896;"></span>ベージュ
-        </button>
-      </div>
-
-      <div class="preview-stage">
-
-        <div id="case-preview">
-          <!-- Layer 1: ベースカラー（JS が background-color を更新） -->
-          <div class="base-layer" id="base-layer"></div>
-          <!-- Layer 2: 質感（shadow/gloss） mix-blend-mode: multiply -->
-          <img class="texture-layer" id="texture-layer" src="./images/texture.png" alt="" aria-hidden="true">
-          <!-- Layer 3: 外枠・固定パーツ（最前面） -->
-          <img class="frame-layer" id="frame-layer" src="./images/BLK_frame.png" alt="" aria-hidden="true">
+      <!-- 左カラム: スマホ プレビュー -->
+      <div class="pc-left">
+        <div class="card ac-item" id="ac-preview">
+          <button class="ac-header" data-target="body-preview">
+            <span class="ac-title">スマホ プレビュー</span>
+            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="ac-body" id="body-preview">
+            <div class="ac-inner">
+              <div class="color-toggle">
+                <button class="toggle-btn active" id="toggle-BLK" data-color="BLK">
+                  <span class="toggle-swatch" style="background:#1a1a1a;"></span>ブラック
+                </button>
+                <button class="toggle-btn" id="toggle-BGE" data-color="BGE">
+                  <span class="toggle-swatch" style="background:#d4b896;"></span>ベージュ
+                </button>
+              </div>
+              <div class="canvas-stage" id="canvas-stage">
+                <div class="canvas-wrap" id="canvas-wrap">
+                  <canvas id="main-canvas"></canvas>
+                </div>
+              </div>
+              <p class="disclaimer">
+                ※画面上の色・フォントはイメージです。実際の印刷と異なる場合があります。
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <p class="disclaimer">
-        ※ベースのケースカラーに影響を受けるため、画面上の色と仕上がりが異なる事があります。
-      </p>
-    </div><!-- /.preview-card -->
+      <!-- 右カラム: 入力セクション群 -->
+      <div class="pc-right">
 
-    <!-- ── カラーピッカー ── -->
-    <div class="card picker-card">
-
-      <!-- コントロール -->
-      <div class="picker-controls">
-
-        <!-- 色相スライダー -->
-        <div class="row-hue">
-          <span class="ctrl-label">色相</span>
-          <div class="hue-track">
-            <input type="range" id="hue-slider" class="hue-slider" min="0" max="360" value="200" step="1" aria-label="色相">
+        <!-- ① テキスト設定 -->
+        <div class="card ac-item">
+          <button class="ac-header" data-target="body-text">
+            <span class="ac-title"><span class="ac-num">1</span>テキスト設定</span>
+            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="ac-body" id="body-text">
+            <div class="ac-inner">
+              <div class="np-row">
+                <label class="ctrl-label" for="text-input">テキスト</label>
+                <input type="text" id="text-input" class="np-text-input" placeholder="名前やメッセージを入力…" maxlength="30">
+              </div>
+              <div class="np-row">
+                <label class="ctrl-label" for="font-select">フォント</label>
+                <select id="font-select" class="np-select">
+                  <option value="Roboto">Roboto — サンセリフ</option>
+                  <option value="Playfair Display">Playfair Display — エレガント</option>
+                  <option value="Permanent Marker">Permanent Marker — 手書き</option>
+                </select>
+              </div>
+              <div class="np-row np-row-slider">
+                <span class="ctrl-label">サイズ</span>
+                <div class="hue-track">
+                  <input type="range" id="font-size" class="gray-slider" min="12" max="80" value="36" step="1">
+                </div>
+                <span class="size-badge" id="size-badge">36</span>
+              </div>
+              <div class="tc-section">
+                <p class="tc-label">文字色</p>
+                <div class="tc-sv-map" id="tc-sv-map">
+                  <div class="tc-sv-cursor" id="tc-sv-cursor"></div>
+                </div>
+                <div class="row-hue" style="margin-top:10px;">
+                  <div class="hue-track" style="flex:1;">
+                    <input type="range" id="tc-hue-slider" class="hue-slider" min="0" max="360" value="0" step="1" aria-label="文字色 色相">
+                  </div>
+                </div>
+                <div class="row-hex" style="margin-top:8px;">
+                  <div class="hex-chip" id="tc-hex-chip"></div>
+                  <span class="hex-label-text">HEX</span>
+                  <code class="hex-code" id="tc-hex-code">#FFFFFF</code>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- HEX 表示 -->
-        <div class="row-hex">
-          <div class="hex-chip" id="hex-chip"></div>
-          <span class="hex-label-text">HEX</span>
-          <code class="hex-code" id="hex-code">#3399FF</code>
+        <!-- ② テキスト配置 -->
+        <div class="card ac-item">
+          <button class="ac-header" data-target="body-layout">
+            <span class="ac-title"><span class="ac-num">2</span>テキスト配置</span>
+            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="ac-body" id="body-layout">
+            <div class="ac-inner">
+              <div class="align-btns">
+                <button class="align-btn" data-align="top">▲ 上部</button>
+                <button class="align-btn" data-align="center">● 中央</button>
+                <button class="align-btn" data-align="bottom">▼ 下部</button>
+              </div>
+              <button class="save-btn" id="save-btn">
+                <span class="save-btn-label">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+                  デザインを保存・共有
+                </span>
+                <span class="save-btn-loading">
+                  <span class="spinner"></span>保存中…
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- コピーボタン -->
-        <button class="copy-btn" id="copy-btn" type="button">
-          カラーコードをコピー
-        </button>
-        <p class="copy-msg" id="copy-msg">カラーコードをコピーしました</p>
+        <!-- ③ 本体カラー -->
+        <div class="card ac-item">
+          <button class="ac-header" data-target="body-bgcolor">
+            <span class="ac-title"><span class="ac-num">3</span>本体カラー</span>
+            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="ac-body" id="body-bgcolor">
+            <div class="ac-inner" style="padding-bottom:0;">
+              <div class="picker-controls">
+                <div class="row-hue">
+                  <span class="ctrl-label">色相</span>
+                  <div class="hue-track">
+                    <input type="range" id="hue-slider" class="hue-slider" min="0" max="360" value="200" step="1">
+                  </div>
+                </div>
+                <div class="row-hex">
+                  <div class="hex-chip" id="hex-chip"></div>
+                  <span class="hex-label-text">HEX</span>
+                  <code class="hex-code" id="hex-code">#3399FF</code>
+                </div>
+                <button class="copy-btn" id="copy-btn" type="button">カラーコードをコピー</button>
+                <p class="copy-msg" id="copy-msg">カラーコードをコピーしました</p>
+              </div>
+              <div class="sv-map" id="sv-map">
+                <div class="sv-cursor" id="sv-cursor"></div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      </div>
-
-      <!-- SV マップ（彩度・明度） -->
-      <!-- 横方向: Saturation 0→1（左→右）  縦方向: Value 1→0（上→下） -->
-      <div class="sv-map" id="sv-map" aria-label="彩度・明度選択エリア">
-        <div class="sv-cursor" id="sv-cursor"></div>
-      </div>
-
-    </div><!-- /.picker-card -->
+      </div><!-- /.pc-right -->
+    </div><!-- /.pc-layout -->
 
   </div><!-- /.app -->
 
-  <script src="script.js"></script>
+  <!-- 共有URLモーダル -->
+  <div class="share-modal" id="share-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+    <div class="share-modal-inner">
+      <p class="share-modal-title" id="share-modal-title">デザインを保存しました</p>
+      <p class="share-modal-desc">以下のURLでデザインを共有できます</p>
+      <div class="share-url-row">
+        <input type="text" id="share-url-input" class="share-url-input" readonly aria-label="共有URL">
+        <button class="share-copy-btn" id="share-copy-btn">コピー</button>
+      </div>
+      <p class="share-copy-msg" id="share-copy-msg">コピーしました</p>
+      <button class="share-close-btn" id="share-close-btn">閉じる</button>
+    </div>
+  </div>
+
+  <!-- エラートースト -->
+  <div class="error-toast" id="error-toast" role="alert" aria-live="assertive"></div>
+
+  <!-- 読み込みオーバーレイ（?id= 指定時） -->
+  <div class="load-overlay hidden" id="load-overlay" aria-hidden="true">
+    <div class="load-overlay-spinner"></div>
+    <p class="load-overlay-text">デザインを読み込んでいます…</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="supabase.config.js"></script>
+  <script src="script_nameprint.js"></script>
 </body>
 </html>
