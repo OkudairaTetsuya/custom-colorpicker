@@ -12,11 +12,26 @@
   <link rel="stylesheet" href="style_nameprint.css">
 </head>
 <body>
+
+  <!-- ① 機種選択画面 -->
+  <div id="model-select-screen">
+    <div class="app">
+      <header class="app-header">
+        <h1 class="app-title">機種を選択</h1>
+        <p class="app-desc">カスタマイズするスマホケースの機種を選んでください</p>
+      </header>
+      <div class="model-list" id="model-list"></div>
+      <p class="model-loading" id="model-loading">読み込み中…</p>
+    </div>
+  </div>
+
+  <!-- ② メインカスタマイザー -->
+  <div id="main-app" style="display:none;">
   <div class="app">
 
     <header class="app-header">
       <h1 class="app-title">名入れカスタマイズ</h1>
-      <p class="app-desc">テキストを追加してオリジナルケースをデザイン</p>
+      <p class="app-desc" id="app-model-name"></p>
     </header>
 
     <div class="pc-layout">
@@ -189,6 +204,7 @@
     </div><!-- /.pc-layout -->
 
   </div><!-- /.app -->
+  </div><!-- /#main-app -->
 
   <!-- 共有URLモーダル -->
   <div class="share-modal" id="share-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">

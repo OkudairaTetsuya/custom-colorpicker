@@ -27,8 +27,9 @@
   /* 文字色 */
   var tcHue = 0,   tcSat = 0,    tcVal = 1.00, tcDrag = false;
 
-  var currentBase = 'BLK';
-  var currentFont = 'Roboto';
+  var currentBase  = 'BLK';
+  var currentModel = null;
+  var currentFont  = 'Roboto';
   var currentSize = 36;
   var activeText  = null;
   var textureObj  = null;
@@ -167,7 +168,11 @@
       onLoad();
     });
 
-    fabric.Image.fromURL('./images/' + baseColor + '_frame.png', function (img) {
+    var frameUrl = currentModel
+      ? './images/' + currentModel.slug + '_' + baseColor + '.png'
+      : './images/' + baseColor + '_frame.png';
+
+    fabric.Image.fromURL(frameUrl, function (img) {
       img.set({
         left: 0, top: 0,
         scaleX: CANVAS_W / img.width,
@@ -181,7 +186,67 @@
     });
   }
 
-  loadImages(currentBase);
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     機種選択
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var modelSelectScreen = document.getElementById('model-select-screen');
+  var mainApp           = document.getElementById('main-app');
+  var appModelName      = document.getElementById('app-model-name');
+
+  function applyModel(model) {
+    currentModel = model;
+    var h = 600;
+    var w = Math.round(h * (model.width_mm / model.height_mm));
+    CANVAS_W = w; CANVAS_H = h;
+    canvas.setWidth(w);
+    canvas.setHeight(h);
+    loadImages(currentBase);
+  }
+
+  function showMainApp(model) {
+    applyModel(model);
+    appModelName.textContent = model.name + '  ' + model.width_mm + ' × ' + model.height_mm + ' mm';
+    modelSelectScreen.style.display = 'none';
+    mainApp.style.display = 'block';
+    scaleCanvas();
+    renderBg();
+    renderTc();
+  }
+
+  function loadModelList() {
+    var listEl    = document.getElementById('model-list');
+    var loadingEl = document.getElementById('model-loading');
+    if (!supabaseClient) {
+      loadingEl.textContent = '機種データを読み込めません（Supabase未設定）';
+      return;
+    }
+    supabaseClient.from('case_models')
+      .select('*')
+      .order('name', { ascending: true })
+      .then(function (res) {
+        loadingEl.style.display = 'none';
+        if (res.error) {
+          loadingEl.style.display = 'block';
+          loadingEl.textContent = '読み込みに失敗しました: ' + res.error.message;
+          return;
+        }
+        var models = res.data || [];
+        if (!models.length) {
+          loadingEl.style.display = 'block';
+          loadingEl.textContent = '機種が登録されていません。管理画面から追加してください。';
+          return;
+        }
+        models.forEach(function (m) {
+          var card = document.createElement('button');
+          card.className = 'model-card';
+          card.innerHTML =
+            '<span class="model-card-name">' + m.name + '</span>' +
+            '<span class="model-card-size">' + m.width_mm + ' × ' + m.height_mm + ' mm</span>';
+          card.addEventListener('click', function () { showMainApp(m); });
+          listEl.appendChild(card);
+        });
+      });
+  }
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      Color Math: HSV ↔ RGB ↔ HEX
@@ -592,6 +657,7 @@
           font_family : currentFont,
           font_size   : currentSize,
           text_color  : currentTextColor(),
+          model_id    : currentModel ? currentModel.id : null,
         });
       })
       .then(function (insertResult) {
@@ -650,6 +716,8 @@
     }
 
     showLoadOverlay(true);
+    modelSelectScreen.style.display = 'none';
+    mainApp.style.display = 'block';
 
     supabaseClient
       .from('designs')
@@ -660,6 +728,15 @@
         if (result.error) throw result.error;
         var data = result.data;
         if (!data) throw new Error('デザインが見つかりません');
+
+        /* 機種を復元してキャンバスサイズを設定 */
+        var modelPromise = data.model_id
+          ? supabaseClient.from('case_models').select('*').eq('id', data.model_id).single()
+              .then(function (mr) { if (!mr.error && mr.data) applyModel(mr.data); })
+          : Promise.resolve();
+
+        return modelPromise.then(function () {
+          scaleCanvas();
 
         /* Canvas 復元 */
         canvas.loadFromJSON(data.canvas_json, function () {
@@ -713,11 +790,14 @@
         tcHue = tcHsv[0]; tcSat = tcHsv[1]; tcVal = tcHsv[2];
         tcHueSl.value = Math.round(tcHue);
         renderTc();
+        }); /* end modelPromise.then */
       })
       .catch(function (err) {
         console.error('loadDesign error:', err);
         showError('デザインの読み込みに失敗しました：' + (err.message || '通信エラー'));
         showLoadOverlay(false);
+        modelSelectScreen.style.display = 'block';
+        mainApp.style.display = 'none';
       });
   }
 
@@ -805,7 +885,12 @@
   renderBg();
   renderTc();
 
-  /* URLにidが含まれている場合は復元 */
-  loadDesignFromUrl();
+  /* URLにidが含まれている場合は復元、なければ機種選択 */
+  var urlId = new URLSearchParams(location.search).get('id');
+  if (urlId) {
+    loadDesignFromUrl();
+  } else {
+    loadModelList();
+  }
 
 }());
