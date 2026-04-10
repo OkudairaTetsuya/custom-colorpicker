@@ -153,16 +153,24 @@
     if (!frameUrl) return;
 
     fabric.Image.fromURL(frameUrl, function (img) {
+      /* 画像の実寸に合わせてキャンバスをリサイズ（歪み防止） */
+      var h = 600;
+      var w = Math.round(h * (img.width / img.height));
+      CANVAS_W = w; CANVAS_H = h;
+      canvas.setWidth(w);
+      canvas.setHeight(h);
+
       img.set({
         left: 0, top: 0,
-        scaleX: CANVAS_W / img.width,
-        scaleY: CANVAS_H / img.height,
+        scaleX: w / img.width,
+        scaleY: h / img.height,
         selectable: false, evented: false,
         globalCompositeOperation: 'source-over',
       });
       canvas.add(img);
       frameObj = img;
       canvas.bringToFront(frameObj);
+      scaleCanvas();
       canvas.renderAll();
     });
   }
@@ -176,14 +184,8 @@
 
   function applyModel(model) {
     currentModel = model;
-    var h = 600;
-    var w = Math.round(h * (model.width_mm / model.height_mm));
-    CANVAS_W = w; CANVAS_H = h;
-    canvas.setWidth(w);
-    canvas.setHeight(h);
     loadImages(currentBase);
     canvasPlaceholder.style.display = 'none';
-    scaleCanvas();
     renderBg();
     renderTc();
   }
