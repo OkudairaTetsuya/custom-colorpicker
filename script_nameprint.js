@@ -170,7 +170,6 @@
     }
 
     fabric.Image.fromURL(frameUrl, function (img) {
-      /* 画像の実寸に合わせてキャンバスをリサイズ（歪み防止） */
       var h = 600;
       var w = Math.round(h * (img.width / img.height));
       CANVAS_W = w; CANVAS_H = h;
@@ -188,15 +187,13 @@
       frameObj = img;
       canvas.bringToFront(frameObj);
 
-      /* 画像ロード後に背景色を適用 */
       renderBg();
 
       scaleCanvas();
       canvas.renderAll();
 
-      /* ローディングバー非表示 */
       if (canvasLoader) canvasLoader.classList.remove('active');
-    });
+    }, { crossOrigin: 'anonymous' });
   }
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
