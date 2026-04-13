@@ -188,55 +188,80 @@
   }
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     機種選択
+     機種セレクター（ブランド→機種 2ステップ）
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  var modelSelectEl     = document.getElementById('model-select');
-  var modelSelectRow    = document.getElementById('model-select-row');
+  var msSelectorWrap  = document.getElementById('model-selector-wrap');
+  var msBrandStep     = document.getElementById('ms-brand-step');
+  var msModelStep     = document.getElementById('ms-model-step');
+  var msBrandLabelEl  = document.getElementById('ms-brand-label');
+  var brandGridEl     = document.getElementById('brand-grid');
+  var modelListEl     = document.getElementById('model-list');
+  var msBackBtn       = document.getElementById('ms-back-btn');
   var modelSelectedBar  = document.getElementById('model-selected-bar');
   var modelSelectedName = document.getElementById('model-selected-name');
   var modelChangeBtn    = document.getElementById('model-change-btn');
   var canvasPlaceholder = document.getElementById('canvas-placeholder');
   var modelMap          = {}; /* id → model オブジェクト */
+  var brandGroups       = {}; /* brand → model[] */
 
-  /* 機種選択済みチップを表示してキャンバスまでスクロール */
+  /* ブランドステップへ戻る */
+  function showBrandStep() {
+    msModelStep.classList.remove('ms-active');
+    setTimeout(function () {
+      msModelStep.style.display = 'none';
+      msBrandStep.style.display = 'block';
+    }, 260);
+    msBrandStep.style.opacity = '1';
+  }
+
+  /* 機種ステップへ進む */
+  function showModelStep(brand) {
+    msBrandLabelEl.textContent = brand;
+    modelListEl.innerHTML = '';
+    (brandGroups[brand] || []).forEach(function (m) {
+      var b = document.createElement('button');
+      b.type      = 'button';
+      b.className = 'model-item-btn';
+      b.textContent = m.name;
+      b.addEventListener('click', function () {
+        applyModel(m);
+        showModelChip(m.name);
+      });
+      modelListEl.appendChild(b);
+    });
+    msBrandStep.style.display = 'none';
+    msModelStep.style.display = 'block';
+    void msModelStep.offsetWidth; /* reflow でアニメーションリセット */
+    msModelStep.classList.add('ms-active');
+  }
+
+  /* 選択済みチップを表示してキャンバスまでスクロール */
   function showModelChip(name) {
-    modelSelectRow.style.display = 'none';
+    msSelectorWrap.style.display = 'none';
     modelSelectedName.textContent = name;
     modelSelectedBar.classList.add('visible');
-    /* キャンバス上端をsave-bar直下に合わせてスクロール */
     setTimeout(function () {
-      var rect = canvasStage.getBoundingClientRect();
-      var saveBarH = 56;
-      var target = window.scrollY + rect.top - saveBarH - 8;
+      var rect    = canvasStage.getBoundingClientRect();
+      var target  = window.scrollY + rect.top - 64;
       window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
     }, 80);
   }
 
-  /* 「変更」押下でドロップダウンに戻す */
+  /* 「変更」→ブランド選択に戻す */
   modelChangeBtn.addEventListener('click', function () {
     modelSelectedBar.classList.remove('visible');
-    modelSelectRow.style.display = 'block';
-    modelSelectEl.focus();
+    msSelectorWrap.style.display = 'block';
+    showBrandStep();
   });
+
+  msBackBtn.addEventListener('click', showBrandStep);
 
   function applyModel(model) {
     currentModel = model;
     canvasPlaceholder.style.display = 'none';
-    loadImages(currentBase); /* renderBg() は loadImages コールバック内で呼ばれる */
+    loadImages(currentBase);
     renderTc();
   }
-
-  modelSelectEl.addEventListener('change', function () {
-    var model = modelMap[this.value];
-    if (model) {
-      applyModel(model);
-      showModelChip(model.name);
-    } else {
-      canvasPlaceholder.style.display = 'flex';
-      modelSelectedBar.classList.remove('visible');
-      modelSelectRow.style.display = 'block';
-    }
-  });
 
   function loadModelList() {
     if (!supabaseClient) return;
@@ -245,12 +270,24 @@
       .order('name', { ascending: true })
       .then(function (res) {
         if (res.error || !res.data) return;
+
+        /* modelMap と brandGroups を構築 */
         res.data.forEach(function (m) {
           modelMap[m.id] = m;
-          var opt = document.createElement('option');
-          opt.value       = m.id;
-          opt.textContent = m.name;
-          modelSelectEl.appendChild(opt);
+          var brand = (m.brand && m.brand.trim()) ? m.brand.trim() : 'その他';
+          if (!brandGroups[brand]) brandGroups[brand] = [];
+          brandGroups[brand].push(m);
+        });
+
+        /* ブランドボタンを生成 */
+        brandGridEl.innerHTML = '';
+        Object.keys(brandGroups).sort().forEach(function (brand) {
+          var b = document.createElement('button');
+          b.type      = 'button';
+          b.className = 'brand-btn';
+          b.textContent = brand;
+          b.addEventListener('click', function () { showModelStep(brand); });
+          brandGridEl.appendChild(b);
         });
       });
   }
@@ -697,7 +734,6 @@
               .then(function (mr) {
                 if (!mr.error && mr.data) {
                   applyModel(mr.data);
-                  modelSelectEl.value = mr.data.id;
                   showModelChip(mr.data.name);
                 }
               })

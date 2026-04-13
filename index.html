@@ -35,13 +35,27 @@
       <div class="pc-left">
         <div class="card" id="card-preview">
           <div class="preview-inner">
-            <!-- 機種選択ドロップダウン -->
-            <div class="model-select-row" id="model-select-row">
-              <select id="model-select" class="model-select-dropdown">
-                <option value="">— 機種を選択 —</option>
-              </select>
+            <!-- 機種セレクター（ブランド→機種の2ステップ） -->
+            <div class="model-selector-wrap" id="model-selector-wrap">
+              <!-- ステップ1: ブランド選択 -->
+              <div class="ms-step" id="ms-brand-step">
+                <p class="ms-label">メーカーを選択</p>
+                <div class="brand-grid" id="brand-grid">
+                  <!-- JSで動的生成 -->
+                </div>
+              </div>
+              <!-- ステップ2: 機種選択 -->
+              <div class="ms-step" id="ms-model-step">
+                <div class="ms-back-row">
+                  <button class="ms-back-btn" id="ms-back-btn" type="button">← 戻る</button>
+                  <span class="ms-brand-label" id="ms-brand-label"></span>
+                </div>
+                <div class="model-list" id="model-list">
+                  <!-- JSで動的生成 -->
+                </div>
+              </div>
             </div>
-            <!-- 機種選択済みチップ（選択後に表示） -->
+            <!-- 選択済みチップ -->
             <div class="model-selected-bar" id="model-selected-bar">
               <span class="model-selected-name" id="model-selected-name"></span>
               <button class="model-change-btn" id="model-change-btn" type="button">変更</button>

@@ -214,11 +214,11 @@
   var modelsTbody    = document.getElementById('models-tbody');
   var modelsEmpty    = document.getElementById('models-empty');
   var addModelForm   = document.getElementById('add-model-form');
+  var modelBrandEl   = document.getElementById('model-brand');
   var modelNameEl    = document.getElementById('model-name');
   var modelSlugEl    = document.getElementById('model-slug');
   var modelWidthEl   = document.getElementById('model-width');
   var modelHeightEl  = document.getElementById('model-height');
-  var modelSortEl    = document.getElementById('model-sort');
 
   function loadModels(thenDesigns) {
     return sb.from('case_models')
@@ -257,10 +257,11 @@
     }
 
     var cells = [
-      eCell(m.name,        'name'),
-      eCell(m.slug,        'slug'),
-      eCell(m.width_mm,    'width_mm',    'number'),
-      eCell(m.height_mm,   'height_mm',   'number'),
+      eCell(m.brand || '',  'brand'),
+      eCell(m.name,         'name'),
+      eCell(m.slug,         'slug'),
+      eCell(m.width_mm,     'width_mm',  'number'),
+      eCell(m.height_mm,    'height_mm', 'number'),
     ];
 
     /* 操作 */
@@ -345,19 +346,19 @@
   });
 
   function clearModelForm() {
-    [modelNameEl, modelSlugEl, modelWidthEl, modelHeightEl].forEach(function (el) { el.value = ''; });
-    modelSortEl.value = '0';
+    [modelBrandEl, modelNameEl, modelSlugEl, modelWidthEl, modelHeightEl].forEach(function (el) { el.value = ''; });
   }
 
   document.getElementById('submit-model-btn').addEventListener('click', function () {
+    var brand  = modelBrandEl.value.trim();
     var name   = modelNameEl.value.trim();
     var slug   = modelSlugEl.value.trim();
     var width  = parseFloat(modelWidthEl.value);
     var height = parseFloat(modelHeightEl.value);
-    if (!name || !slug || isNaN(width) || isNaN(height)) {
+    if (!brand || !name || !slug || isNaN(width) || isNaN(height)) {
       showToast('全ての項目を入力してください', 'error'); return;
     }
-    sb.from('case_models').insert({ name: name, slug: slug, width_mm: width, height_mm: height })
+    sb.from('case_models').insert({ brand: brand, name: name, slug: slug, width_mm: width, height_mm: height })
       .then(function (res) {
         if (res.error) { showToast('追加失敗: ' + res.error.message, 'error'); return; }
         showToast(name + ' を追加しました');

@@ -78,8 +78,115 @@
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    機種選択ドロップダウン
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.model-select-row {
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   機種セレクター（ブランド→機種）
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.model-selector-wrap {
   margin-bottom: 10px;
+}
+
+.ms-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted, #AEAEB2);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* ブランドグリッド */
+.brand-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.brand-btn {
+  padding: 13px 8px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border, rgba(0,0,0,0.08));
+  background: var(--light, #F5F5F7);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text, #1C1C1E);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.brand-btn:active {
+  background: var(--text, #1C1C1E);
+  color: #fff;
+  border-color: var(--text, #1C1C1E);
+}
+
+/* 機種ステップ */
+#ms-model-step {
+  display: none;
+}
+
+@keyframes ms-slide-in {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+#ms-model-step.ms-active {
+  display: block;
+  animation: ms-slide-in 0.26s ease;
+}
+
+.ms-back-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ms-back-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue, #007AFF);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font);
+}
+
+.ms-brand-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text, #1C1C1E);
+}
+
+/* 機種リスト */
+.model-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.model-item-btn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border, rgba(0,0,0,0.08));
+  background: var(--light, #F5F5F7);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #1C1C1E);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+.model-item-btn:active {
+  background: var(--text, #1C1C1E);
+  color: #fff;
+  border-color: var(--text, #1C1C1E);
 }
 
 /* 機種選択済みチップ */
