@@ -13,33 +13,93 @@
 </head>
 <body>
 
+  <!-- 固定保存バー -->
+  <div class="save-bar" id="save-bar">
+    <button class="save-btn" id="save-btn">
+      <span class="save-btn-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+        デザインを保存・共有
+      </span>
+      <span class="save-btn-loading">
+        <span class="spinner"></span>保存中…
+      </span>
+    </button>
+  </div>
+
   <div id="main-app">
   <div class="app">
-
-    <header class="app-header">
-      <h1 class="app-title">名入れカスタマイズ</h1>
-    </header>
 
     <div class="pc-layout">
 
       <!-- 左カラム: スマホ プレビュー -->
       <div class="pc-left">
-        <div class="card ac-item" id="ac-preview">
-          <button class="ac-header" data-target="body-preview">
-            <span class="ac-title">スマホ プレビュー</span>
+        <div class="card" id="card-preview">
+          <div class="preview-inner">
+            <!-- 機種選択ドロップダウン -->
+            <div class="model-select-row">
+              <select id="model-select" class="model-select-dropdown">
+                <option value="">— 機種を選択 —</option>
+              </select>
+            </div>
+            <div class="canvas-stage" id="canvas-stage">
+              <div class="canvas-wrap" id="canvas-wrap">
+                <canvas id="main-canvas"></canvas>
+              </div>
+              <!-- 未選択プレースホルダー -->
+              <div class="canvas-placeholder" id="canvas-placeholder">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="#C7C7CC" stroke="none"/></svg>
+                <p>機種を選択してください</p>
+              </div>
+              <!-- 画像ローディングバー -->
+              <div class="canvas-loader" id="canvas-loader">
+                <div class="canvas-loader-bar"></div>
+              </div>
+            </div>
+            <p class="disclaimer">
+              ※画面上の色・フォントはイメージです。実際の印刷と異なる場合があります。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右カラム: カスタマイズステップ -->
+      <div class="pc-right">
+
+        <!-- モバイル: ステップインジケーター -->
+        <div class="step-indicator" id="step-indicator">
+          <button class="step-dot active" data-step="0">
+            <span class="step-dot-num">1</span>
+            <span class="step-dot-label">本体カラー</span>
+          </button>
+          <button class="step-dot" data-step="1">
+            <span class="step-dot-num">2</span>
+            <span class="step-dot-label">名入れ</span>
+          </button>
+          <button class="step-dot" data-step="2">
+            <span class="step-dot-num">3</span>
+            <span class="step-dot-label">フォント</span>
+          </button>
+          <button class="step-dot" data-step="3">
+            <span class="step-dot-num">4</span>
+            <span class="step-dot-label">文字色</span>
+          </button>
+          <button class="step-dot" data-step="4">
+            <span class="step-dot-num">5</span>
+            <span class="step-dot-label">配置</span>
+          </button>
+        </div>
+
+        <!-- ステップ 1: 本体カラー -->
+        <div class="card step-card active" data-step-idx="0" id="step-card-0">
+          <button class="ac-header pc-ac-header" data-target="step-body-0">
+            <span class="ac-title"><span class="ac-num">1</span>本体カラー</span>
             <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          <div class="ac-body" id="body-preview">
-            <div class="ac-inner">
-              <!-- 機種選択ドロップダウン -->
-              <div class="model-select-row">
-                <select id="model-select" class="model-select-dropdown">
-                  <option value="">— 機種を選択 —</option>
-                </select>
-              </div>
+          <div class="step-body" id="step-body-0">
+            <div class="step-inner">
               <!-- ケース本体カラー -->
               <div class="case-color-row">
-                <span class="ctrl-label">ケース本体カラー</span>
+                <span class="ctrl-label">ケース素材</span>
                 <div class="color-toggle">
                   <button class="toggle-btn active" id="toggle-BLK" data-color="BLK">
                     <span class="toggle-swatch" style="background:#1a1a1a;"></span>ブラック
@@ -49,82 +109,116 @@
                   </button>
                 </div>
               </div>
-              <div class="canvas-stage" id="canvas-stage">
-                <div class="canvas-wrap" id="canvas-wrap">
-                  <canvas id="main-canvas"></canvas>
-                </div>
-                <!-- 未選択プレースホルダー -->
-                <div class="canvas-placeholder" id="canvas-placeholder">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="#C7C7CC" stroke="none"/></svg>
-                  <p>機種を選択してください</p>
+              <!-- SV マップ -->
+              <div class="sv-map" id="sv-map">
+                <div class="sv-cursor" id="sv-cursor"></div>
+              </div>
+              <!-- 色相スライダー -->
+              <div class="row-hue" style="margin-top:12px;">
+                <div class="hue-track" style="flex:1;">
+                  <input type="range" id="hue-slider" class="hue-slider" min="0" max="360" value="200" step="1" aria-label="色相">
                 </div>
               </div>
-              <p class="disclaimer">
-                ※画面上の色・フォントはイメージです。実際の印刷と異なる場合があります。
-              </p>
+              <!-- HEX 表示（コピーボタンなし） -->
+              <div class="row-hex" style="margin-top:8px;">
+                <div class="hex-chip" id="hex-chip"></div>
+                <span class="hex-label-text">HEX</span>
+                <code class="hex-code" id="hex-code">#3399FF</code>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 右カラム: 入力セクション群 -->
-      <div class="pc-right">
-
-        <!-- ① 文字入れ・カスタム -->
-        <div class="card ac-item">
-          <button class="ac-header" data-target="body-text">
-            <span class="ac-title"><span class="ac-num">1</span>文字入れ・カスタム</span>
+        <!-- ステップ 2: 名入れ -->
+        <div class="card step-card" data-step-idx="1" id="step-card-1">
+          <button class="ac-header pc-ac-header" data-target="step-body-1">
+            <span class="ac-title"><span class="ac-num">2</span>名入れ内容</span>
             <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          <div class="ac-body" id="body-text">
-            <div class="ac-inner">
+          <div class="step-body" id="step-body-1">
+            <div class="step-inner">
               <div class="np-row">
-                <label class="ctrl-label" for="text-input">テキスト</label>
                 <input type="text" id="text-input" class="np-text-input" placeholder="名前やメッセージを入力…" maxlength="30">
               </div>
               <div class="np-row text-layer-btns">
-                <span class="ctrl-label"></span>
                 <button type="button" id="add-text-btn" class="align-btn">＋ テキストを追加</button>
                 <button type="button" id="del-text-btn" class="align-btn align-btn-danger">✕ 削除</button>
               </div>
-              <div class="np-row np-row-font">
-                <span class="ctrl-label">フォント</span>
-                <div class="font-picker" id="font-picker">
-                  <button type="button" class="font-picker-trigger" id="font-picker-trigger">
-                    <span class="font-picker-label" id="font-picker-label">ゴシック体</span>
-                    <svg class="font-picker-chevron" viewBox="0 0 12 8" fill="none" stroke="#AEAEB2" stroke-width="1.5" stroke-linecap="round"><path d="M1 1l5 5 5-5"/></svg>
-                  </button>
-                  <ul class="font-picker-list" id="font-picker-list" role="listbox">
-                    <li class="font-picker-option" data-value="Roboto" data-label="ゴシック体" role="option">
-                      <span class="fpo-name">ゴシック体</span>
-                      <span class="fpo-preview" style="font-family:'Roboto',sans-serif;">ABCabc123</span>
-                    </li>
-                    <li class="font-picker-option" data-value="Sacramento" data-label="丸筆記体" role="option">
-                      <span class="fpo-name">丸筆記体</span>
-                      <span class="fpo-preview" style="font-family:'Sacramento',cursive;">ABCabc123</span>
-                    </li>
-                    <li class="font-picker-option" data-value="Alex Brush" data-label="筆記体" role="option">
-                      <span class="fpo-name">筆記体</span>
-                      <span class="fpo-preview" style="font-family:'Alex Brush',cursive;">ABCabc123</span>
-                    </li>
-                    <li class="font-picker-option" data-value="Noto Serif JP" data-label="明朝体（日本語・ハングル対応）" role="option">
-                      <span class="fpo-name">明朝体（日本語・ハングル対応）</span>
-                      <span class="fpo-preview" style="font-family:'Noto Serif JP',serif;">ABCabc123</span>
-                    </li>
-                    <li class="font-picker-option" data-value="Noto Sans" data-label="シンプルゴシック体（日本語・ハングル対応）" role="option">
-                      <span class="fpo-name">シンプルゴシック体（日本語・ハングル対応）</span>
-                      <span class="fpo-preview" style="font-family:'Noto Sans',sans-serif;">ABCabc123</span>
-                    </li>
-                  </ul>
-                </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ステップ 3: フォント -->
+        <div class="card step-card" data-step-idx="2" id="step-card-2">
+          <button class="ac-header pc-ac-header" data-target="step-body-2">
+            <span class="ac-title"><span class="ac-num">3</span>フォント・サイズ</span>
+            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="step-body" id="step-body-2">
+            <div class="step-inner">
+              <!-- ビジュアルフォントグリッド -->
+              <div class="font-grid" id="font-grid">
+                <button type="button" class="font-card selected" data-value="Roboto">
+                  <span class="font-card-preview" style="font-family:'Roboto',sans-serif;">Aa Bb 123</span>
+                </button>
+                <button type="button" class="font-card" data-value="Sacramento">
+                  <span class="font-card-preview" style="font-family:'Sacramento',cursive;">Aa Bb 123</span>
+                </button>
+                <button type="button" class="font-card" data-value="Alex Brush">
+                  <span class="font-card-preview" style="font-family:'Alex Brush',cursive;">Aa Bb 123</span>
+                </button>
+                <button type="button" class="font-card" data-value="Noto Serif JP">
+                  <span class="font-card-preview" style="font-family:'Noto Serif JP',serif;">あいうえお</span>
+                </button>
+                <button type="button" class="font-card" data-value="Noto Sans">
+                  <span class="font-card-preview" style="font-family:'Noto Sans',sans-serif;">あいうえお</span>
+                </button>
               </div>
-              <div class="np-row np-row-slider">
+              <!-- サイズスライダー -->
+              <div class="np-row np-row-slider" style="margin-top:16px;">
                 <span class="ctrl-label">サイズ</span>
-                <div class="hue-track">
+                <div class="hue-track" style="flex:1;">
                   <input type="range" id="font-size" class="gray-slider" min="12" max="80" value="36" step="1">
                 </div>
                 <span class="size-badge" id="size-badge">36</span>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ステップ 4: 文字色 -->
+        <div class="card step-card" data-step-idx="3" id="step-card-3">
+          <button class="ac-header pc-ac-header" data-target="step-body-3">
+            <span class="ac-title"><span class="ac-num">4</span>文字色</span>
+            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="step-body" id="step-body-3">
+            <div class="step-inner">
+              <div class="tc-sv-map" id="tc-sv-map">
+                <div class="tc-sv-cursor" id="tc-sv-cursor"></div>
+              </div>
+              <div class="row-hue" style="margin-top:10px;">
+                <div class="hue-track" style="flex:1;">
+                  <input type="range" id="tc-hue-slider" class="hue-slider" min="0" max="360" value="0" step="1" aria-label="文字色 色相">
+                </div>
+              </div>
+              <div class="row-hex" style="margin-top:8px;">
+                <div class="hex-chip" id="tc-hex-chip"></div>
+                <span class="hex-label-text">HEX</span>
+                <code class="hex-code" id="tc-hex-code">#FFFFFF</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ステップ 5: 配置 -->
+        <div class="card step-card" data-step-idx="4" id="step-card-4">
+          <button class="ac-header pc-ac-header" data-target="step-body-4">
+            <span class="ac-title"><span class="ac-num">5</span>配置・回転</span>
+            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="step-body" id="step-body-4">
+            <div class="step-inner">
               <div class="np-row">
                 <span class="ctrl-label">配置</span>
                 <div class="align-btns">
@@ -140,66 +234,16 @@
                   <button class="align-btn" id="rotate-cw">↻ 時計回り</button>
                 </div>
               </div>
-              <div class="tc-section">
-                <p class="tc-label">文字色</p>
-                <div class="tc-sv-map" id="tc-sv-map">
-                  <div class="tc-sv-cursor" id="tc-sv-cursor"></div>
-                </div>
-                <div class="row-hue" style="margin-top:10px;">
-                  <div class="hue-track" style="flex:1;">
-                    <input type="range" id="tc-hue-slider" class="hue-slider" min="0" max="360" value="0" step="1" aria-label="文字色 色相">
-                  </div>
-                </div>
-                <div class="row-hex" style="margin-top:8px;">
-                  <div class="hex-chip" id="tc-hex-chip"></div>
-                  <span class="hex-label-text">HEX</span>
-                  <code class="hex-code" id="tc-hex-code">#FFFFFF</code>
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
-        <!-- ② 本体カラー -->
-        <div class="card ac-item">
-          <button class="ac-header" data-target="body-bgcolor">
-            <span class="ac-title"><span class="ac-num">2</span>本体カラー</span>
-            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="ac-body" id="body-bgcolor">
-            <div class="ac-inner" style="padding-bottom:0;">
-              <div class="picker-controls">
-                <div class="row-hue">
-                  <span class="ctrl-label">色相</span>
-                  <div class="hue-track">
-                    <input type="range" id="hue-slider" class="hue-slider" min="0" max="360" value="200" step="1">
-                  </div>
-                </div>
-                <div class="row-hex">
-                  <div class="hex-chip" id="hex-chip"></div>
-                  <span class="hex-label-text">HEX</span>
-                  <code class="hex-code" id="hex-code">#3399FF</code>
-                </div>
-                <button class="copy-btn" id="copy-btn" type="button">カラーコードをコピー</button>
-                <p class="copy-msg" id="copy-msg">カラーコードをコピーしました</p>
-              </div>
-              <div class="sv-map" id="sv-map">
-                <div class="sv-cursor" id="sv-cursor"></div>
-              </div>
-            </div>
-          </div>
+        <!-- モバイル: ステップナビゲーション -->
+        <div class="step-nav" id="step-nav">
+          <button id="step-prev-btn" class="step-nav-btn" disabled>← 戻る</button>
+          <span class="step-counter" id="step-counter">1 / 5</span>
+          <button id="step-next-btn" class="step-nav-btn step-nav-next">次へ →</button>
         </div>
-
-        <!-- 保存ボタン -->
-        <button class="save-btn" id="save-btn">
-          <span class="save-btn-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
-            デザインを保存・共有
-          </span>
-          <span class="save-btn-loading">
-            <span class="spinner"></span>保存中…
-          </span>
-        </button>
 
       </div><!-- /.pc-right -->
     </div><!-- /.pc-layout -->

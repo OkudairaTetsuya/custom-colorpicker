@@ -43,8 +43,6 @@
   var hueSlider  = document.getElementById('hue-slider');
   var hexChip    = document.getElementById('hex-chip');
   var hexCode    = document.getElementById('hex-code');
-  var copyBtn    = document.getElementById('copy-btn');
-  var copyMsg    = document.getElementById('copy-msg');
 
   var tcSvMap    = document.getElementById('tc-sv-map');
   var tcSvCursor = document.getElementById('tc-sv-cursor');
@@ -53,24 +51,22 @@
   var tcHexCode  = document.getElementById('tc-hex-code');
 
   var textInput  = document.getElementById('text-input');
-  var fontPicker      = document.getElementById('font-picker');
-  var fontPickerTrigger = document.getElementById('font-picker-trigger');
-  var fontPickerLabel = document.getElementById('font-picker-label');
-  var fontPickerList  = document.getElementById('font-picker-list');
+  var fontGrid   = document.getElementById('font-grid');
   var fontSizeEl = document.getElementById('font-size');
   var sizeBadge  = document.getElementById('size-badge');
 
-  var canvasWrap  = document.getElementById('canvas-wrap');
-  var canvasStage = document.getElementById('canvas-stage');
+  var canvasWrap    = document.getElementById('canvas-wrap');
+  var canvasStage   = document.getElementById('canvas-stage');
+  var canvasLoader  = document.getElementById('canvas-loader');
 
-  var saveBtn      = document.getElementById('save-btn');
-  var shareModal   = document.getElementById('share-modal');
+  var saveBtn       = document.getElementById('save-btn');
+  var shareModal    = document.getElementById('share-modal');
   var shareUrlInput = document.getElementById('share-url-input');
-  var shareCopyBtn = document.getElementById('share-copy-btn');
-  var shareCopyMsg = document.getElementById('share-copy-msg');
+  var shareCopyBtn  = document.getElementById('share-copy-btn');
+  var shareCopyMsg  = document.getElementById('share-copy-msg');
   var shareCloseBtn = document.getElementById('share-close-btn');
-  var errorToast   = document.getElementById('error-toast');
-  var loadOverlay  = document.getElementById('load-overlay');
+  var errorToast    = document.getElementById('error-toast');
+  var loadOverlay   = document.getElementById('load-overlay');
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      Fabric.js グローバル設定（タッチ用大きめハンドル）
@@ -104,12 +100,10 @@
     textInput.value = textObj.text || '';
     currentFont = textObj.fontFamily || 'Roboto';
     currentSize = textObj.fontSize  || 36;
-    fontSizeEl.value          = currentSize;
-    sizeBadge.textContent     = currentSize;
-    var opt = fontPickerList.querySelector('[data-value="' + currentFont + '"]');
-    fontPickerLabel.textContent = opt ? opt.dataset.label : currentFont;
-    document.querySelectorAll('.font-picker-option').forEach(function (o) {
-      o.classList.toggle('selected', o.dataset.value === currentFont);
+    fontSizeEl.value       = currentSize;
+    sizeBadge.textContent  = currentSize;
+    document.querySelectorAll('.font-card').forEach(function (c) {
+      c.classList.toggle('selected', c.dataset.value === currentFont);
     });
     var fill = textObj.fill || '#FFFFFF';
     if (!/^#[0-9a-fA-F]{6}$/.test(fill)) fill = '#FFFFFF';
@@ -128,10 +122,13 @@
     if (obj && (obj.type === 'i-text' || obj.type === 'text')) syncControlsToText(obj);
   });
 
-  /* レスポンシブスケーリング */
+  /* レスポンシブスケーリング（最大60%高さ） */
   function scaleCanvas() {
     var available = canvasStage.clientWidth;
-    var scale = Math.min(1, available / CANVAS_W);
+    var maxH = Math.round(CANVAS_H * 0.60);
+    var scaleByW = available / CANVAS_W;
+    var scaleByH = maxH / CANVAS_H;
+    var scale = Math.min(1, scaleByW, scaleByH);
     canvasWrap.style.transform = 'scale(' + scale + ')';
     canvasWrap.style.transformOrigin = 'top center';
     canvasStage.style.height = Math.ceil(CANVAS_H * scale) + 'px';
@@ -140,17 +137,25 @@
   scaleCanvas();
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     画像ロード（texture + frame）
+     画像ロード（frame）
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   function loadImages(baseColor) {
     if (textureObj) { canvas.remove(textureObj); textureObj = null; }
     if (frameObj)   { canvas.remove(frameObj);   frameObj   = null; }
 
+    /* ローディングバー表示、背景を一旦クリア */
+    if (canvasLoader) canvasLoader.classList.add('active');
+    canvas.backgroundColor = null;
+    canvas.renderAll();
+
     var frameUrl = currentModel
       ? './images/' + currentModel.slug + '_' + baseColor + '.png'
       : null;
 
-    if (!frameUrl) return;
+    if (!frameUrl) {
+      if (canvasLoader) canvasLoader.classList.remove('active');
+      return;
+    }
 
     fabric.Image.fromURL(frameUrl, function (img) {
       /* 画像の実寸に合わせてキャンバスをリサイズ（歪み防止） */
@@ -170,23 +175,29 @@
       canvas.add(img);
       frameObj = img;
       canvas.bringToFront(frameObj);
+
+      /* 画像ロード後に背景色を適用 */
+      renderBg();
+
       scaleCanvas();
       canvas.renderAll();
+
+      /* ローディングバー非表示 */
+      if (canvasLoader) canvasLoader.classList.remove('active');
     });
   }
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      機種選択
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  var modelSelectEl   = document.getElementById('model-select');
+  var modelSelectEl    = document.getElementById('model-select');
   var canvasPlaceholder = document.getElementById('canvas-placeholder');
-  var modelMap        = {}; /* id → model オブジェクト */
+  var modelMap         = {}; /* id → model オブジェクト */
 
   function applyModel(model) {
     currentModel = model;
-    loadImages(currentBase);
     canvasPlaceholder.style.display = 'none';
-    renderBg();
+    loadImages(currentBase); /* renderBg() は loadImages コールバック内で呼ばれる */
     renderTc();
   }
 
@@ -375,14 +386,12 @@
   textInput.addEventListener('input', function () { updateText(this.value); });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     フォントピッカー
+     ビジュアルフォントグリッド
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  function selectFont(value, label) {
+  function selectFont(value) {
     currentFont = value;
-    fontPickerLabel.textContent = label;
-    fontPicker.classList.remove('open');
-    document.querySelectorAll('.font-picker-option').forEach(function (opt) {
-      opt.classList.toggle('selected', opt.dataset.value === value);
+    document.querySelectorAll('.font-card').forEach(function (card) {
+      card.classList.toggle('selected', card.dataset.value === value);
     });
     if (!activeText) return;
     document.fonts.load('400 1em "' + currentFont + '"').then(function () {
@@ -391,21 +400,10 @@
     });
   }
 
-  fontPickerTrigger.addEventListener('click', function () {
-    fontPicker.classList.toggle('open');
-  });
-
-  document.querySelectorAll('.font-picker-option').forEach(function (opt) {
-    opt.addEventListener('click', function () {
-      selectFont(this.dataset.value, this.dataset.label);
+  document.querySelectorAll('.font-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      selectFont(this.dataset.value);
     });
-  });
-
-  /* ピッカー外クリックで閉じる */
-  document.addEventListener('click', function (e) {
-    if (!fontPicker.contains(e.target)) {
-      fontPicker.classList.remove('open');
-    }
   });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -437,6 +435,7 @@
     btn.addEventListener('click', function () {
       if (!activeText) return;
       var pos = this.dataset.align;
+      if (!pos) return;
       var top = pos === 'top' ? 70 : pos === 'center' ? CANVAS_H / 2 : CANVAS_H - 70;
       activeText.set({ left: CANVAS_W / 2, top: top });
       activeText.setCoords();
@@ -498,29 +497,6 @@
     canvas.renderAll();
   });
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     コピーボタン（背景色HEX）
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  var copyTimer = null;
-  function showCopyMsg() {
-    copyMsg.classList.add('visible');
-    clearTimeout(copyTimer);
-    copyTimer = setTimeout(function () { copyMsg.classList.remove('visible'); }, 2500);
-  }
-  copyBtn.addEventListener('click', function () {
-    var hex = hexCode.textContent;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(hex).then(showCopyMsg); return;
-    }
-    var ta = document.createElement('textarea');
-    ta.value = hex;
-    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
-    document.body.appendChild(ta);
-    ta.focus(); ta.select();
-    try { document.execCommand('copy'); showCopyMsg(); } catch (e) {}
-    document.body.removeChild(ta);
-  });
-
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      ユーティリティ
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -528,7 +504,6 @@
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
       return crypto.randomUUID();
     }
-    /* フォールバック (古いブラウザ) */
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
       var r = Math.random() * 16 | 0;
       return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
@@ -586,12 +561,10 @@
 
     var id = generateUUID();
 
-    /* 1. Canvas JSON（カスタムプロパティを含めてシリアライズ） */
     var canvasJson = JSON.stringify(
       canvas.toJSON(['globalCompositeOperation', 'selectable', 'evented'])
     );
 
-    /* 2. プレビュー画像生成（500px幅・JPEG 0.75） */
     var previewDataUrl = canvas.toDataURL({
       format    : 'jpeg',
       quality   : 0.75,
@@ -600,7 +573,6 @@
     var previewBlob = dataURLtoBlob(previewDataUrl);
     var filename    = id + '.jpg';
 
-    /* 3. Storage アップロード → DB 保存 */
     supabaseClient.storage
       .from('previews')
       .upload(filename, previewBlob, { contentType: 'image/jpeg', upsert: false })
@@ -626,7 +598,6 @@
       .then(function (insertResult) {
         if (insertResult.error) throw insertResult.error;
 
-        /* 4. 共有URL発行 */
         var shareUrl = location.origin + location.pathname + '?id=' + id;
         setBtnLoading(false);
         showShareModal(shareUrl);
@@ -690,7 +661,6 @@
         var data = result.data;
         if (!data) throw new Error('デザインが見つかりません');
 
-        /* 機種を復元してキャンバスサイズを設定 */
         var modelPromise = data.model_id
           ? supabaseClient.from('case_models').select('*').eq('id', data.model_id).single()
               .then(function (mr) {
@@ -704,59 +674,52 @@
         return modelPromise.then(function () {
           scaleCanvas();
 
-        /* Canvas 復元 */
-        canvas.loadFromJSON(data.canvas_json, function () {
-          /* オブジェクト参照を再割り当て */
-          activeText = null; textureObj = null; frameObj = null;
-          canvas.getObjects().forEach(function (obj) {
-            if (obj.type === 'i-text' || obj.type === 'text') {
-              if (!activeText) activeText = obj; /* 最初のテキストをアクティブに */
-            } else if (obj.type === 'image') {
-              if (obj.globalCompositeOperation === 'multiply') {
-                textureObj = obj;
-              } else {
-                frameObj = obj;
+          canvas.loadFromJSON(data.canvas_json, function () {
+            activeText = null; textureObj = null; frameObj = null;
+            canvas.getObjects().forEach(function (obj) {
+              if (obj.type === 'i-text' || obj.type === 'text') {
+                if (!activeText) activeText = obj;
+              } else if (obj.type === 'image') {
+                if (obj.globalCompositeOperation === 'multiply') {
+                  textureObj = obj;
+                } else {
+                  frameObj = obj;
+                }
               }
-            }
+            });
+            if (activeText) syncControlsToText(activeText);
+            canvas.renderAll();
+            showLoadOverlay(false);
           });
-          if (activeText) syncControlsToText(activeText);
-          canvas.renderAll();
-          showLoadOverlay(false);
+
+          currentBase  = data.base_skin   || 'BLK';
+          currentFont  = data.font_family || 'Roboto';
+          currentSize  = data.font_size   || 36;
+          textInput.value    = data.text_value  || '';
+          selectFont(currentFont);
+          fontSizeEl.value   = currentSize;
+          sizeBadge.textContent = currentSize;
+
+          document.querySelectorAll('.toggle-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.color === currentBase);
+          });
+
+          var bgHex = (data.base_color || '#3399FF').toUpperCase();
+          hexChip.style.backgroundColor = bgHex;
+          hexCode.textContent            = bgHex;
+          var bgHsv = hexToHsv(bgHex);
+          bgHue = bgHsv[0]; bgSat = bgHsv[1]; bgVal = bgHsv[2];
+          hueSlider.value = Math.round(bgHue);
+          renderBg();
+
+          var tcHex = (data.text_color || '#FFFFFF').toUpperCase();
+          tcHexChip.style.backgroundColor = tcHex;
+          tcHexCode.textContent            = tcHex;
+          var tcHsv = hexToHsv(tcHex);
+          tcHue = tcHsv[0]; tcSat = tcHsv[1]; tcVal = tcHsv[2];
+          tcHueSl.value = Math.round(tcHue);
+          renderTc();
         });
-
-        /* UI 同期 */
-        currentBase        = data.base_skin   || 'BLK';
-        currentFont        = data.font_family || 'Roboto';
-        currentSize        = data.font_size   || 36;
-        textInput.value    = data.text_value  || '';
-        var restoredOpt = fontPickerList.querySelector('[data-value="' + currentFont + '"]');
-        if (restoredOpt) selectFont(currentFont, restoredOpt.dataset.label);
-        fontSizeEl.value   = currentSize;
-        sizeBadge.textContent = currentSize;
-
-        /* カラートグルボタン */
-        document.querySelectorAll('.toggle-btn').forEach(function (b) {
-          b.classList.toggle('active', b.dataset.color === currentBase);
-        });
-
-        /* 本体カラー表示 */
-        var bgHex = (data.base_color || '#3399FF').toUpperCase();
-        hexChip.style.backgroundColor = bgHex;
-        hexCode.textContent            = bgHex;
-        var bgHsv = hexToHsv(bgHex);
-        bgHue = bgHsv[0]; bgSat = bgHsv[1]; bgVal = bgHsv[2];
-        hueSlider.value = Math.round(bgHue);
-        renderBg();
-
-        /* 文字色表示 */
-        var tcHex = (data.text_color || '#FFFFFF').toUpperCase();
-        tcHexChip.style.backgroundColor = tcHex;
-        tcHexCode.textContent            = tcHex;
-        var tcHsv = hexToHsv(tcHex);
-        tcHue = tcHsv[0]; tcSat = tcHsv[1]; tcVal = tcHsv[2];
-        tcHueSl.value = Math.round(tcHue);
-        renderTc();
-        }); /* end modelPromise.then */
       })
       .catch(function (err) {
         console.error('loadDesign error:', err);
@@ -766,78 +729,98 @@
   }
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     アコーディオン
+     モバイル ステップカルーセル
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var currentStep = 0;
+  var totalSteps  = 5;
 
-  /* 右カラム: 排他的アコーディオン（常に1つだけ開く） */
-  var exclusiveIds = ['body-text', 'body-bgcolor'];
+  function goToStep(n) {
+    currentStep = Math.max(0, Math.min(totalSteps - 1, n));
 
-  function openExclusive(targetId) {
-    exclusiveIds.forEach(function (id) {
-      var body   = document.getElementById(id);
-      var header = document.querySelector('[data-target="' + id + '"]');
-      if (!body || !header) return;
-      if (id === targetId) {
-        body.style.maxHeight = body.scrollHeight + 'px';
-        header.classList.add('open');
-        body.addEventListener('transitionend', function onEnd() {
-          body.style.maxHeight = 'none';
-          body.removeEventListener('transitionend', onEnd);
-        });
-      } else {
-        body.style.maxHeight = body.scrollHeight + 'px';
-        requestAnimationFrame(function () { body.style.maxHeight = '0'; });
-        header.classList.remove('open');
-      }
+    document.querySelectorAll('.step-card').forEach(function (card) {
+      var idx = parseInt(card.dataset.stepIdx, 10);
+      card.classList.toggle('active', idx === currentStep);
     });
+
+    document.querySelectorAll('.step-dot').forEach(function (dot) {
+      var step = parseInt(dot.dataset.step, 10);
+      dot.classList.toggle('active', step === currentStep);
+      dot.classList.toggle('done', step < currentStep);
+    });
+
+    var counter = document.getElementById('step-counter');
+    if (counter) counter.textContent = (currentStep + 1) + ' / ' + totalSteps;
+
+    var prevBtn = document.getElementById('step-prev-btn');
+    var nextBtn = document.getElementById('step-next-btn');
+    if (prevBtn) prevBtn.disabled = (currentStep === 0);
+    if (nextBtn) {
+      nextBtn.textContent = (currentStep === totalSteps - 1) ? '完了 ✓' : '次へ →';
+    }
   }
 
-  exclusiveIds.forEach(function (id) {
-    var header = document.querySelector('[data-target="' + id + '"]');
-    if (!header) return;
-    header.addEventListener('click', function () {
-      if (this.classList.contains('open')) return; /* 既に開いていれば何もしない */
-      openExclusive(id);
+  document.getElementById('step-prev-btn').addEventListener('click', function () {
+    goToStep(currentStep - 1);
+  });
+  document.getElementById('step-next-btn').addEventListener('click', function () {
+    if (currentStep < totalSteps - 1) {
+      goToStep(currentStep + 1);
+    }
+  });
+
+  document.querySelectorAll('.step-dot').forEach(function (dot) {
+    dot.addEventListener('click', function () {
+      goToStep(parseInt(this.dataset.step, 10));
     });
   });
 
-  /* プレビュー: 単独トグル（排他グループ外） */
-  (function () {
-    var header = document.querySelector('[data-target="body-preview"]');
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PC アコーディオン（step-body）
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var stepBodyIds = ['step-body-0','step-body-1','step-body-2','step-body-3','step-body-4'];
+
+  function openStepBody(targetId) {
+    var body   = document.getElementById(targetId);
+    var header = document.querySelector('[data-target="' + targetId + '"]');
+    if (!body || !header) return;
+    var isOpen = header.classList.contains('open');
+    if (isOpen) {
+      /* 閉じる */
+      body.style.maxHeight = body.scrollHeight + 'px';
+      requestAnimationFrame(function () { body.style.maxHeight = '0'; });
+      header.classList.remove('open');
+    } else {
+      /* 開く */
+      body.style.maxHeight = body.scrollHeight + 'px';
+      header.classList.add('open');
+      body.addEventListener('transitionend', function onEnd() {
+        body.style.maxHeight = 'none';
+        body.removeEventListener('transitionend', onEnd);
+      });
+    }
+  }
+
+  stepBodyIds.forEach(function (id) {
+    var header = document.querySelector('[data-target="' + id + '"]');
     if (!header) return;
     header.addEventListener('click', function () {
-      var body   = document.getElementById('body-preview');
-      var isOpen = this.classList.contains('open');
-      if (isOpen) {
-        body.style.maxHeight = body.scrollHeight + 'px';
-        requestAnimationFrame(function () { body.style.maxHeight = '0'; });
-        header.classList.remove('open');
-      } else {
-        body.style.maxHeight = body.scrollHeight + 'px';
-        header.classList.add('open');
-        body.addEventListener('transitionend', function onEnd() {
-          body.style.maxHeight = 'none';
-          body.removeEventListener('transitionend', onEnd);
-          scaleCanvas();
-        });
-      }
+      /* PC のみ動作（モバイルでは pc-ac-header が display:none） */
+      openStepBody(id);
     });
-  })();
+  });
 
-  /* 初期状態: プレビューとテキスト設定を即展開 */
+  /* PC初期状態: step-body-0 を展開 */
   (function () {
-    ['body-preview', 'body-text'].forEach(function (id) {
-      var body   = document.getElementById(id);
-      var header = document.querySelector('[data-target="' + id + '"]');
-      if (!body || !header) return;
-      body.style.transition = 'none';
-      body.style.maxHeight  = 'none';
-      header.classList.add('open');
-      requestAnimationFrame(function () {
-        body.style.transition = '';
-        if (id === 'body-preview') scaleCanvas();
-      });
-    });
+    if (window.matchMedia('(min-width: 780px)').matches) {
+      var body   = document.getElementById('step-body-0');
+      var header = document.querySelector('[data-target="step-body-0"]');
+      if (body && header) {
+        body.style.transition = 'none';
+        body.style.maxHeight  = 'none';
+        header.classList.add('open');
+        requestAnimationFrame(function () { body.style.transition = ''; });
+      }
+    }
   })();
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -849,7 +832,10 @@
   renderBg();
   renderTc();
 
-  /* 機種リスト読み込み（常時） */
+  /* モバイル: 初期ステップ設定 */
+  goToStep(0);
+
+  /* 機種リスト読み込み */
   loadModelList();
   /* URLにidが含まれている場合はデザイン復元 */
   if (new URLSearchParams(location.search).get('id')) loadDesignFromUrl();
