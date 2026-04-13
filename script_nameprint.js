@@ -22,10 +22,10 @@
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      状態
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  /* 本体カラー */
-  var bgHue = 200, bgSat = 0.75, bgVal = 0.90, bgDrag = false;
-  /* 文字色 */
-  var tcHue = 0,   tcSat = 0,    tcVal = 1.00, tcDrag = false;
+  /* 本体カラー: デフォルト白 (#FFFFFF) */
+  var bgHue = 0, bgSat = 0, bgVal = 1.0, bgDrag = false;
+  /* 文字色: デフォルト黒 (#000000) */
+  var tcHue = 0, tcSat = 0, tcVal = 0.0, tcDrag = false;
 
   var currentBase  = 'BLK';
   var currentModel = null;
