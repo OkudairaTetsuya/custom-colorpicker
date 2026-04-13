@@ -465,8 +465,24 @@
       .replace(/(<svg\b[^>]*)\bheight="[^"]*"/, '$1height="' + hMm + 'mm"');
   }
 
+  /* 絵文字を含む文字列かチェック */
+  function containsEmoji(str) {
+    return /\p{Emoji_Presentation}|\p{Extended_Pictographic}/u.test(str);
+  }
+
   /* エクスポートメイン */
   function exportSVG(design, model) {
+    /* 絵文字チェック: canvas_json 内のテキストを確認 */
+    try {
+      var jsonObj = JSON.parse(design.canvas_json);
+      var hasEmoji = (jsonObj.objects || []).some(function (o) {
+        return (o.type === 'i-text' || o.type === 'text') && containsEmoji(o.text || '');
+      });
+      if (hasEmoji) {
+        if (!confirm('このデザインには絵文字が含まれています。\n絵文字は opentype.js でパス化できないため SVG に正しく出力されません。\n\nそのまま出力しますか？')) return;
+      }
+    } catch (e) { /* JSON解析失敗は無視して続行 */ }
+
     showToast('SVG を生成中…');
 
     /* 一時キャンバスを生成して canvas_json を復元 */
