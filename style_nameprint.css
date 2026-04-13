@@ -381,6 +381,7 @@
 .step-inner .sv-map {
   border-radius: 10px;
   margin-top: 4px;
+  aspect-ratio: 5 / 2; /* 元の2/1から80%の高さに */
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -523,7 +524,7 @@
 .tc-sv-map {
   position: relative;
   width: 100%;
-  aspect-ratio: 2 / 1;
+  aspect-ratio: 5 / 2; /* 元の2/1から80%の高さに */
   border-radius: 10px;
   cursor: crosshair;
   touch-action: none;
