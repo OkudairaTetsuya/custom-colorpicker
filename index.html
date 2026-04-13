@@ -55,9 +55,6 @@
                 <div class="canvas-loader-bar"></div>
               </div>
             </div>
-            <p class="disclaimer">
-              ※画面上の色・フォントはイメージです。実際の印刷と異なる場合があります。
-            </p>
           </div>
         </div>
       </div>
@@ -109,15 +106,15 @@
                   </button>
                 </div>
               </div>
-              <!-- SV マップ -->
-              <div class="sv-map" id="sv-map">
-                <div class="sv-cursor" id="sv-cursor"></div>
-              </div>
-              <!-- 色相スライダー -->
-              <div class="row-hue" style="margin-top:12px;">
+              <!-- 色相スライダー（上） -->
+              <div class="row-hue" style="margin-bottom:12px;">
                 <div class="hue-track" style="flex:1;">
                   <input type="range" id="hue-slider" class="hue-slider" min="0" max="360" value="200" step="1" aria-label="色相">
                 </div>
+              </div>
+              <!-- SV マップ（下） -->
+              <div class="sv-map" id="sv-map">
+                <div class="sv-cursor" id="sv-cursor"></div>
               </div>
               <!-- HEX 表示（コピーボタンなし） -->
               <div class="row-hex" style="margin-top:8px;">
@@ -125,6 +122,10 @@
                 <span class="hex-label-text">HEX</span>
                 <code class="hex-code" id="hex-code">#3399FF</code>
               </div>
+              <!-- 免責テキスト -->
+              <p class="disclaimer" style="margin-top:12px;">
+                ※画面上の色・フォントはイメージです。実際の印刷と異なる場合があります。
+              </p>
             </div>
           </div>
         </div>
