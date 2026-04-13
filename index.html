@@ -195,13 +195,15 @@
           </button>
           <div class="step-body" id="step-body-3">
             <div class="step-inner">
-              <div class="tc-sv-map" id="tc-sv-map">
-                <div class="tc-sv-cursor" id="tc-sv-cursor"></div>
-              </div>
-              <div class="row-hue" style="margin-top:10px;">
+              <!-- 色相スライダー（上） -->
+              <div class="row-hue" style="margin-bottom:12px;">
                 <div class="hue-track" style="flex:1;">
                   <input type="range" id="tc-hue-slider" class="hue-slider" min="0" max="360" value="0" step="1" aria-label="文字色 色相">
                 </div>
+              </div>
+              <!-- SV マップ（下） -->
+              <div class="tc-sv-map" id="tc-sv-map">
+                <div class="tc-sv-cursor" id="tc-sv-cursor"></div>
               </div>
               <div class="row-hex" style="margin-top:8px;">
                 <div class="hex-chip" id="tc-hex-chip"></div>
