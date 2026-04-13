@@ -696,14 +696,16 @@
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      ユーティリティ
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  function generateUUID() {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-      return crypto.randomUUID();
+  function generateId() {
+    /* 見間違えやすい文字（0/o/1/l/i）を除いた英小文字＋数字 20文字 */
+    var chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+    var arr   = new Uint8Array(20);
+    crypto.getRandomValues(arr);
+    var result = '';
+    for (var i = 0; i < 20; i++) {
+      result += chars[arr[i] % chars.length];
     }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-      var r = Math.random() * 16 | 0;
-      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    });
+    return result;
   }
 
   function dataURLtoBlob(dataURL) {
@@ -754,7 +756,7 @@
     }
     setBtnLoading(true);
 
-    var id = generateUUID();
+    var id = generateId();
 
     var canvasJson = JSON.stringify(
       canvas.toJSON(['globalCompositeOperation', 'selectable', 'evented'])
