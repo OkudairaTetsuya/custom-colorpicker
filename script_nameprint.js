@@ -480,7 +480,13 @@
     canvas.renderAll();
   }
 
+  var emojiRe = /\p{Emoji_Presentation}|\p{Extended_Pictographic}/u;
+
   textInput.addEventListener('input', function () {
+    if (emojiRe.test(this.value)) {
+      this.value = this.value.replace(new RegExp(emojiRe.source, 'gu'), '');
+      showError('絵文字はご利用いただけません');
+    }
     updateText(this.value);
     refreshLayerList();
   });
