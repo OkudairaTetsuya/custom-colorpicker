@@ -38,6 +38,11 @@
     <div id="tab-designs" class="tab-pane">
       <div class="pane-toolbar">
         <span class="record-count" id="designs-count"></span>
+        <div class="search-box">
+          <input type="text" id="search-id-input" class="search-input" placeholder="IDで検索…" maxlength="20" autocomplete="off">
+          <button class="btn-sm" id="search-id-btn">検索</button>
+          <button class="btn-sm" id="search-clear-btn" style="display:none;">クリア</button>
+        </div>
         <button class="btn-sm" id="refresh-designs-btn">更新</button>
       </div>
       <div class="table-scroll">

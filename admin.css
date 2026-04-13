@@ -175,9 +175,30 @@ body {
 .pane-toolbar {
   display        : flex;
   align-items    : center;
-  justify-content: space-between;
+  gap            : 10px;
+  flex-wrap      : wrap;
   margin-bottom  : 14px;
 }
+
+.search-box {
+  display    : flex;
+  align-items: center;
+  gap        : 6px;
+  flex       : 1;
+}
+
+.search-input {
+  height       : 30px;
+  padding      : 0 10px;
+  border       : 1px solid var(--border);
+  border-radius: 7px;
+  font-size    : 13px;
+  font-family  : var(--mono);
+  width        : 200px;
+  outline      : none;
+  transition   : border-color 0.15s;
+}
+.search-input:focus { border-color: var(--blue); }
 
 .record-count {
   font-size  : 13px;

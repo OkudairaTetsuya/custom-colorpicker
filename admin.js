@@ -216,6 +216,43 @@
     loadModels(true);
   });
 
+  /* ── ID検索 ── */
+  var searchInput    = document.getElementById('search-id-input');
+  var searchBtn      = document.getElementById('search-id-btn');
+  var searchClearBtn = document.getElementById('search-clear-btn');
+
+  function searchById(id) {
+    id = id.trim();
+    if (!id) { loadModels(true); return; }
+    sb.from('designs')
+      .select('*')
+      .ilike('id', '%' + id + '%')
+      .order('created_at', { ascending: false })
+      .then(function (res) {
+        if (res.error) { showToast('検索失敗: ' + res.error.message, 'error'); return; }
+        var rows = res.data || [];
+        designsCount.textContent = rows.length + ' 件（検索結果）';
+        designsTbody.innerHTML   = '';
+        designsEmpty.style.display = rows.length ? 'none' : 'block';
+        rows.forEach(function (d) { designsTbody.appendChild(buildDesignRow(d)); });
+        searchClearBtn.style.display = '';
+      });
+  }
+
+  searchBtn.addEventListener('click', function () {
+    searchById(searchInput.value);
+  });
+
+  searchInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') searchById(this.value);
+  });
+
+  searchClearBtn.addEventListener('click', function () {
+    searchInput.value = '';
+    searchClearBtn.style.display = 'none';
+    loadModels(true);
+  });
+
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      機種マスター
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
