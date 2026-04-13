@@ -466,11 +466,53 @@
     });
   }
 
-  /* <svg> タグの width/height を mm 単位に書き換え（viewBox は維持） */
-  function rewriteMm(svg, wMm, hMm) {
-    return svg
-      .replace(/(<svg\b[^>]*)\bwidth="[^"]*"/, '$1width="' + wMm + 'mm"')
-      .replace(/(<svg\b[^>]*)\bheight="[^"]*"/, '$1height="' + hMm + 'mm"');
+  /* SVG後処理:
+     - width/height を mm 単位に書き換え
+     - viewBox を 0 0 W H に正規化（上部余白の除去）
+     - clipPath でキャンバス外へのはみ出しをマスク
+  */
+  function processSvg(svgStr, wMm, hMm) {
+    var parser = new DOMParser();
+    var doc    = parser.parseFromString(svgStr, 'image/svg+xml');
+    var svgEl  = doc.querySelector('svg');
+    if (!svgEl) return svgStr;
+
+    /* viewBox からピクセル寸法を取得 */
+    var vbParts = (svgEl.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+    var pxW = (vbParts.length >= 4 && vbParts[2] > 0) ? vbParts[2]
+            : parseFloat(svgEl.getAttribute('width'))  || 300;
+    var pxH = (vbParts.length >= 4 && vbParts[3] > 0) ? vbParts[3]
+            : parseFloat(svgEl.getAttribute('height')) || 600;
+
+    /* mm 寸法を設定・viewBox を 0 起点に正規化 */
+    svgEl.setAttribute('width',    wMm + 'mm');
+    svgEl.setAttribute('height',   hMm + 'mm');
+    svgEl.setAttribute('viewBox',  '0 0 ' + pxW + ' ' + pxH);
+    svgEl.setAttribute('overflow', 'hidden');
+
+    /* clipPath をdefs に追加 */
+    var defs = doc.querySelector('defs');
+    if (!defs) {
+      defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      svgEl.insertBefore(defs, svgEl.firstChild);
+    }
+    var cp   = doc.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+    cp.setAttribute('id', 'canvas-clip');
+    var cr   = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    cr.setAttribute('x', '0'); cr.setAttribute('y', '0');
+    cr.setAttribute('width', String(pxW)); cr.setAttribute('height', String(pxH));
+    cp.appendChild(cr);
+    defs.appendChild(cp);
+
+    /* defs・desc 以外の直接子要素すべてに clipPath を適用 */
+    Array.from(svgEl.childNodes).forEach(function (node) {
+      if (node.nodeType !== 1) return;
+      var tag = node.tagName.toLowerCase();
+      if (tag === 'defs' || tag === 'desc') return;
+      node.setAttribute('clip-path', 'url(#canvas-clip)');
+    });
+
+    return new XMLSerializer().serializeToString(doc);
   }
 
   /* 絵文字を含む文字列かチェック */
@@ -510,9 +552,9 @@
       fc.getObjects('image').forEach(function (img) { fc.remove(img); });
       fc.renderAll();
 
-      /* SVG 生成 → mm 書き換え → テキストパス化 → ダウンロード */
+      /* SVG 生成 → 正規化・クリップ → テキストパス化 → ダウンロード */
       var rawSvg = fc.toSVG();
-      var mmSvg  = rewriteMm(rawSvg, model.widthMm, model.heightMm);
+      var mmSvg  = processSvg(rawSvg, model.widthMm, model.heightMm);
 
       textToPath(mmSvg).then(function (finalSvg) {
         var date     = new Date(design.created_at || Date.now())
