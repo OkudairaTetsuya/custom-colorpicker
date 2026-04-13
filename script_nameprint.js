@@ -746,18 +746,14 @@
   });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     復元処理（?id= パラメータ）
+     復元処理（ID指定）
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  function loadDesignFromUrl() {
-    var params = new URLSearchParams(location.search);
-    var id     = params.get('id');
+  function loadDesignById(id, onError) {
     if (!id) return;
-
     if (!supabaseClient) {
       showError('Supabase が未設定のため、デザインを読み込めません。');
       return;
     }
-
     showLoadOverlay(true);
 
     supabaseClient
@@ -813,7 +809,7 @@
             b.classList.toggle('active', b.dataset.color === currentBase);
           });
 
-          var bgHex = (data.base_color || '#3399FF').toUpperCase();
+          var bgHex = (data.base_color || '#FFFFFF').toUpperCase();
           hexChip.style.backgroundColor = bgHex;
           hexCode.textContent            = bgHex;
           var bgHsv = hexToHsv(bgHex);
@@ -821,21 +817,66 @@
           hueSlider.value = Math.round(bgHue);
           renderBg();
 
-          var tcHex = (data.text_color || '#FFFFFF').toUpperCase();
+          var tcHex = (data.text_color || '#000000').toUpperCase();
           tcHexChip.style.backgroundColor = tcHex;
           tcHexCode.textContent            = tcHex;
           var tcHsv = hexToHsv(tcHex);
           tcHue = tcHsv[0]; tcSat = tcHsv[1]; tcVal = tcHsv[2];
           tcHueSl.value = Math.round(tcHue);
           renderTc();
+
+          /* ページ先頭へスクロール */
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       })
       .catch(function (err) {
         console.error('loadDesign error:', err);
-        showError('デザインの読み込みに失敗しました：' + (err.message || '通信エラー'));
         showLoadOverlay(false);
+        if (typeof onError === 'function') {
+          onError(err.message || '通信エラー');
+        } else {
+          showError('デザインの読み込みに失敗しました：' + (err.message || '通信エラー'));
+        }
       });
   }
+
+  /* URLパラメータからの自動復元 */
+  function loadDesignFromUrl() {
+    var id = new URLSearchParams(location.search).get('id');
+    if (id) loadDesignById(id);
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     フッター: ID入力で呼び出し
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  (function () {
+    var recallInput = document.getElementById('recall-id-input');
+    var recallBtn   = document.getElementById('recall-btn');
+    var recallMsg   = document.getElementById('recall-msg');
+
+    function doRecall() {
+      var id = recallInput.value.trim();
+      if (!id) {
+        recallMsg.textContent = 'IDを入力してください';
+        recallMsg.className   = 'recall-msg';
+        return;
+      }
+      recallMsg.textContent = '';
+      recallBtn.disabled    = true;
+      loadDesignById(id, function (errMsg) {
+        recallMsg.textContent = 'IDが見つかりません：' + errMsg;
+        recallMsg.className   = 'recall-msg';
+        recallBtn.disabled    = false;
+      });
+      /* 成功時はloadOverlayが消えてページトップへ。ボタンを戻す */
+      setTimeout(function () { recallBtn.disabled = false; }, 5000);
+    }
+
+    recallBtn.addEventListener('click', doRecall);
+    recallInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') doRecall();
+    });
+  })();
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      モバイル ステップカルーセル

@@ -907,6 +907,87 @@
 .share-close-btn:active { background: var(--light); }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   デザイン呼び出しフッター
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.recall-footer {
+  background: var(--card, #fff);
+  border-top: 1px solid var(--border, rgba(0,0,0,0.08));
+  margin-top: 32px;
+  padding: 24px 16px 40px;
+}
+
+.recall-inner {
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+@media (min-width: 780px) {
+  .recall-inner { max-width: 960px; }
+}
+
+.recall-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text, #1C1C1E);
+  margin-bottom: 12px;
+}
+
+.recall-row {
+  display: flex;
+  gap: 8px;
+}
+
+.recall-input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border, rgba(0,0,0,0.08));
+  border-radius: 10px;
+  font-family: var(--mono, monospace);
+  font-size: 13px;
+  color: var(--text, #1C1C1E);
+  background: var(--light, #F5F5F7);
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color 0.15s;
+}
+.recall-input:focus {
+  border-color: var(--text, #1C1C1E);
+  background: #fff;
+}
+.recall-input::placeholder {
+  color: var(--muted, #AEAEB2);
+  font-family: var(--font);
+}
+
+.recall-btn {
+  flex-shrink: 0;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: none;
+  background: var(--text, #1C1C1E);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.recall-btn:active { opacity: 0.75; }
+.recall-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.recall-msg {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 18px;
+  color: #FF3B30;
+}
+.recall-msg.success { color: #34C759; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    エラートースト
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .error-toast {
