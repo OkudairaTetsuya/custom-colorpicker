@@ -441,15 +441,25 @@
   function loadOtFont(family) {
     if (fontCache[family]) return Promise.resolve(fontCache[family]);
     var url = FONT_WOFF[family] || FONT_WOFF['Roboto'];
+
+    /* fetch + parse を試み、失敗したら opentype.load() XHR にフォールバック */
     return fetch(url)
       .then(function (res) {
-        if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.arrayBuffer();
       })
       .then(function (buf) {
         var font = opentype.parse(buf);
         fontCache[family] = font;
         return font;
+      })
+      .catch(function () {
+        return new Promise(function (resolve, reject) {
+          opentype.load(url, function (err, font) {
+            if (err) { reject(err); }
+            else { fontCache[family] = font; resolve(font); }
+          });
+        });
       });
   }
 
@@ -492,13 +502,15 @@
       function tryFont(font) {
         var dAttr = '';
         Array.from(textEl.querySelectorAll('tspan')).forEach(function (ts) {
-          var text = ts.textContent;
-          if (!text) return;
-          var tx = parseFloat(ts.getAttribute('x') || '0');
-          var ty = parseFloat(ts.getAttribute('y') || '0');
-          var p  = font.getPath(text, tx, ty, fontSize);
-          p.transform(m.a, m.b, m.c, m.d, m.e, m.f);
-          dAttr += p.toPathData(3);
+          try {
+            var text = ts.textContent;
+            if (!text) return;
+            var tx = parseFloat(ts.getAttribute('x') || '0');
+            var ty = parseFloat(ts.getAttribute('y') || '0');
+            var p  = font.getPath(text, tx, ty, fontSize);
+            p.transform(m.a, m.b, m.c, m.d, m.e, m.f);
+            dAttr += p.toPathData(3);
+          } catch (e) { /* 変換不能な文字はスキップ */ }
         });
         return dAttr;
       }
@@ -525,8 +537,7 @@
         parentG.parentElement.replaceChild(pathEl, parentG);
 
       }).catch(function (err) {
-        console.warn('[textToPath] フォント読み込み失敗 (' + family + '):', err.message);
-        /* フォールバック失敗時: <text> 要素をそのまま維持 */
+        showToast('アウトライン化失敗: ' + effectiveFamily + (err ? ' — ' + (err.message || err) : ''), 'error');
       });
     });
 
@@ -670,6 +681,11 @@
       var mmSvg  = processSvg(rawSvg, model.widthMm, model.heightMm);
 
       textToPath(mmSvg).then(function (pathSvg) {
+        /* アウトライン化できなかった <text> が残っていれば通知 */
+        var remaining = (pathSvg.match(/<text[\s>]/g) || []).length;
+        if (remaining > 0) {
+          showToast(remaining + '件のテキストをアウトライン化できませんでした', 'error');
+        }
         /* テキストパス化済みSVGにclipPathを追加してはみ出しを除去 */
         var finalSvg = applyClipPath(pathSvg);
         var date     = new Date(design.created_at || Date.now())
