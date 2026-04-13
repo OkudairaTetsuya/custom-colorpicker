@@ -490,7 +490,20 @@
     svgEl.setAttribute('viewBox',  '0 0 ' + pxW + ' ' + pxH);
     svgEl.setAttribute('overflow', 'hidden');
 
-    /* clipPath をdefs に追加 */
+    /* 背景色 <rect>（x=0 y=0 で全面を覆うもの）を除去
+       → Illustratorで余白に見える原因のため、テキストのみのオーバーレイとして出力 */
+    Array.from(svgEl.childNodes).forEach(function (node) {
+      if (node.nodeType !== 1 || node.tagName.toLowerCase() !== 'rect') return;
+      var x = parseFloat(node.getAttribute('x') || '0');
+      var y = parseFloat(node.getAttribute('y') || '0');
+      var w = parseFloat(node.getAttribute('width')  || '0');
+      var h = parseFloat(node.getAttribute('height') || '0');
+      if (x === 0 && y === 0 && Math.abs(w - pxW) < 1 && Math.abs(h - pxH) < 1) {
+        svgEl.removeChild(node);
+      }
+    });
+
+    /* clipPath をdefs に追加（テキストのはみ出しをマスク） */
     var defs = doc.querySelector('defs');
     if (!defs) {
       defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
