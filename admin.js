@@ -165,7 +165,10 @@
 
     var sel = document.createElement('select');
     sel.className = 'model-sel';
+    if (d.model_id) sel.dataset.modelId = d.model_id;
     buildModelOptions(sel);
+    /* フロントで選んだ機種を初期選択 */
+    if (d.model_id) sel.value = d.model_id;
 
     var btn = document.createElement('button');
     btn.textContent = 'SVG 出力';
@@ -201,7 +204,12 @@
   }
 
   function refreshAllModelSelects() {
-    document.querySelectorAll('.model-sel').forEach(buildModelOptions);
+    /* 各行のセレクトを再構築し、data-model-id 属性で選択を復元 */
+    document.querySelectorAll('.model-sel').forEach(function (sel) {
+      var savedId = sel.dataset.modelId || sel.value;
+      buildModelOptions(sel);
+      if (savedId) sel.value = savedId;
+    });
   }
 
   document.getElementById('refresh-designs-btn').addEventListener('click', function () {
