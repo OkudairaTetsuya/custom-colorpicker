@@ -159,13 +159,43 @@
 }
 
 /* 機種リスト */
+.model-list-wrap {
+  position: relative;
+}
+
 .model-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 240px;
+  max-height: 220px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 28px; /* フェードの分だけ余白 */
+}
+.model-list::-webkit-scrollbar { display: none; }
+
+/* 下にまだある事を示すグラデーションフェード */
+.model-list-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.95));
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+.model-list-fade::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23AEAEB2' stroke-width='2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .model-item-btn {

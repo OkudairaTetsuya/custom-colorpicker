@@ -226,11 +226,21 @@
     msBrandStep.style.opacity = '1';
   }
 
+  /* 機種名から最初の数字を抽出（ソート用） */
+  function extractModelNum(name) {
+    var m = name.match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : 0;
+  }
+
   /* 機種ステップへ進む */
   function showModelStep(brand) {
     msBrandLabelEl.textContent = brand;
     modelListEl.innerHTML = '';
-    (brandGroups[brand] || []).forEach(function (m) {
+    /* 数字が大きい順にソート */
+    var sorted = (brandGroups[brand] || []).slice().sort(function (a, b) {
+      return extractModelNum(b.name) - extractModelNum(a.name);
+    });
+    sorted.forEach(function (m) {
       var b = document.createElement('button');
       b.type      = 'button';
       b.className = 'model-item-btn';

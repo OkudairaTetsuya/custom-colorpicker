@@ -39,7 +39,7 @@
             <div class="model-selector-wrap" id="model-selector-wrap">
               <!-- ステップ1: ブランド選択 -->
               <div class="ms-step" id="ms-brand-step">
-                <p class="ms-label">メーカーを選択</p>
+                <p class="ms-label">機種を選ぶ</p>
                 <div class="brand-grid" id="brand-grid">
                   <!-- JSで動的生成 -->
                 </div>
@@ -50,8 +50,11 @@
                   <button class="ms-back-btn" id="ms-back-btn" type="button">← 戻る</button>
                   <span class="ms-brand-label" id="ms-brand-label"></span>
                 </div>
-                <div class="model-list" id="model-list">
-                  <!-- JSで動的生成 -->
+                <div class="model-list-wrap">
+                  <div class="model-list" id="model-list">
+                    <!-- JSで動的生成 -->
+                  </div>
+                  <div class="model-list-fade"></div>
                 </div>
               </div>
             </div>
