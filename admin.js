@@ -391,6 +391,14 @@
       'https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5/files/playfair-display-latin-700-italic.woff',
     'Permanent Marker':
       'https://cdn.jsdelivr.net/npm/@fontsource/permanent-marker@5/files/permanent-marker-latin-400-normal.woff',
+    'Sacramento':
+      'https://cdn.jsdelivr.net/npm/@fontsource/sacramento@5/files/sacramento-latin-400-normal.woff',
+    'Alex Brush':
+      'https://cdn.jsdelivr.net/npm/@fontsource/alex-brush@5/files/alex-brush-latin-400-normal.woff',
+    'Noto Serif JP':
+      'https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-jp@5/files/noto-serif-jp-japanese-400-normal.woff',
+    'Noto Sans':
+      'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5/files/noto-sans-jp-japanese-400-normal.woff',
   };
 
   function loadOtFont(family) {
@@ -429,13 +437,17 @@
     var jobs = els.map(function (textEl) {
       var parentG   = textEl.parentElement;
       var m         = parseMatrix(parentG ? parentG.getAttribute('transform') : '');
-      var family    = textEl.getAttribute('font-family') || 'Roboto';
+      var family    = (textEl.getAttribute('font-family') || 'Roboto').replace(/['"]/g, '').trim();
       var fontSize  = parseFloat(textEl.getAttribute('font-size') || '36');
       var styleStr  = textEl.getAttribute('style') || '';
       var fill      = styleVal(styleStr, 'fill') || '#000000';
       var opacity   = styleVal(styleStr, 'opacity') || '1';
 
-      return loadOtFont(family).then(function (font) {
+      /* CJK 文字を含むか判定（日本語フォールバック選択に使用） */
+      function hasCjk(str) { return /[\u3000-\u9FFF\uF900-\uFAFF]/.test(str); }
+
+      /* フォントを試してパスデータを生成するヘルパー */
+      function tryFont(font) {
         var dAttr = '';
         Array.from(textEl.querySelectorAll('tspan')).forEach(function (ts) {
           var text = ts.textContent;
@@ -446,9 +458,28 @@
           p.transform(m.a, m.b, m.c, m.d, m.e, m.f);
           dAttr += p.toPathData(3);
         });
+        return dAttr;
+      }
 
+      /* テキスト内容を確認してCJK含むかチェック */
+      var allText = Array.from(textEl.querySelectorAll('tspan'))
+        .map(function (ts) { return ts.textContent; }).join('');
+
+      /* フォント読み込み → パス生成、CJK文字で空になったらフォールバック */
+      return loadOtFont(family).then(function (font) {
+        var dAttr = tryFont(font);
+
+        /* dAttr が空（グリフ未収録）かつ CJK 文字を含む場合は日本語フォントで再試行 */
+        if (!dAttr && hasCjk(allText)) {
+          var cjkFamily = 'Noto Serif JP';
+          return loadOtFont(cjkFamily).then(function (cjkFont) {
+            return tryFont(cjkFont);
+          }).catch(function () { return ''; });
+        }
+        return dAttr;
+
+      }).then(function (dAttr) {
         if (!dAttr || !parentG || !parentG.parentElement) return;
-
         var pathEl = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
         pathEl.setAttribute('d',       dAttr);
         pathEl.setAttribute('fill',    fill);
@@ -457,7 +488,7 @@
 
       }).catch(function (err) {
         console.warn('[textToPath] フォント読み込み失敗 (' + family + '):', err.message);
-        /* フォールバック: <text> 要素をそのまま維持 */
+        /* フォールバック失敗時: <text> 要素をそのまま維持 */
       });
     });
 
@@ -493,35 +524,67 @@
     return new XMLSerializer().serializeToString(doc);
   }
 
-  /* テキストパス化後のSVGにclipPathを追加（はみ出しをIllustratorでも確実にマスク） */
-  function applyClipPath(svgStr, pxW, pxH) {
+  /* テキストパス化後のSVGにclipPathを追加（はみ出しをIllustratorでも確実にマスク）
+     - Illustrator は <g transform="..."> に直接 clip-path を付けると
+       クリップ座標をローカル座標系で解釈してズレる
+     - 対策: transform のないラッパー <g clip-path="..."> で全コンテンツをまとめる */
+  function applyClipPath(svgStr) {
+    /* v20260413c — wrapper-g 方式 */
     var parser = new DOMParser();
     var doc    = parser.parseFromString(svgStr, 'image/svg+xml');
     var svgEl  = doc.querySelector('svg');
     if (!svgEl) return svgStr;
 
+    /* processSvg が正規化した viewBox から寸法を読み取る */
+    var vb  = (svgEl.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+    var pxW = (vb.length >= 4 && vb[2] > 0) ? vb[2] : CANVAS_W;
+    var pxH = (vb.length >= 4 && vb[3] > 0) ? vb[3] : CANVAS_H;
+
+    /* defs を確保 */
     var defs = doc.querySelector('defs');
     if (!defs) {
       defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
       svgEl.insertBefore(defs, svgEl.firstChild);
     }
 
-    /* clipPath 矩形をキャンバスサイズで定義 */
+    /* 既存の canvas-clip を除去してから再定義 */
+    var old = defs.querySelector('#canvas-clip');
+    if (old) defs.removeChild(old);
+
     var cp = doc.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
     cp.setAttribute('id', 'canvas-clip');
     var cr = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
     cr.setAttribute('x', '0'); cr.setAttribute('y', '0');
-    cr.setAttribute('width', String(pxW)); cr.setAttribute('height', String(pxH));
+    cr.setAttribute('width',  String(pxW));
+    cr.setAttribute('height', String(pxH));
     cp.appendChild(cr);
     defs.appendChild(cp);
 
-    /* defs・desc 以外の全直接子に clip-path を適用 */
+    /* defs・desc 以外の直接子を収集しながら個別 clip-path を除去 */
+    var children = [];
     Array.from(svgEl.childNodes).forEach(function (node) {
       if (node.nodeType !== 1) return;
       var tag = node.tagName.toLowerCase();
       if (tag === 'defs' || tag === 'desc') return;
-      node.setAttribute('clip-path', 'url(#canvas-clip)');
+      /* 個別に付いている古い clip-path を外す */
+      node.removeAttribute('clip-path');
+      /* 背景 rect の 100% をピクセル値に確定させる（Illustrator 対策） */
+      if (tag === 'rect') {
+        if (node.getAttribute('width')  === '100%') node.setAttribute('width',  String(pxW));
+        if (node.getAttribute('height') === '100%') node.setAttribute('height', String(pxH));
+      }
+      children.push(node);
     });
+
+    /* transform なしのラッパー <g> に clip-path を一括適用
+       → クリップ座標が SVG ルート座標系と一致し Illustrator でもズレない */
+    var wrapper = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
+    wrapper.setAttribute('clip-path', 'url(#canvas-clip)');
+    children.forEach(function (node) {
+      svgEl.removeChild(node);
+      wrapper.appendChild(node);
+    });
+    svgEl.appendChild(wrapper);
 
     return new XMLSerializer().serializeToString(doc);
   }
@@ -563,9 +626,6 @@
       fc.getObjects('image').forEach(function (img) { fc.remove(img); });
       fc.renderAll();
 
-      /* キャンバスのピクセル寸法を保存（後でclipPath生成に使用） */
-      var cW = fc.width, cH = fc.height;
-
       /* SVG 生成 → mm正規化 → テキストパス化 → clipPath適用 → ダウンロード
          ※ clipPath は textToPath の後に適用する（パス化と干渉しないよう分離） */
       var rawSvg = fc.toSVG();
@@ -573,7 +633,7 @@
 
       textToPath(mmSvg).then(function (pathSvg) {
         /* テキストパス化済みSVGにclipPathを追加してはみ出しを除去 */
-        var finalSvg = applyClipPath(pathSvg, cW, cH);
+        var finalSvg = applyClipPath(pathSvg);
         var date     = new Date(design.created_at || Date.now())
           .toISOString().slice(0, 10).replace(/-/g, '');
         var safeName  = (model.name || 'unknown').replace(/\s+/g, '_');
