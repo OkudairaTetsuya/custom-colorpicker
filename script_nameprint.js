@@ -625,11 +625,10 @@
     saveBtn.classList.toggle('loading', isLoading);
   }
 
-  function showShareModal(url) {
+  function showShareModal(url, id) {
+    document.getElementById('share-id-code').textContent = id || '';
     shareUrlInput.value = url;
     shareModal.style.display = 'flex';
-    shareUrlInput.focus();
-    shareUrlInput.select();
   }
 
   function hideShareModal() {
@@ -692,7 +691,7 @@
 
         var shareUrl = location.origin + location.pathname + '?id=' + id;
         setBtnLoading(false);
-        showShareModal(shareUrl);
+        showShareModal(shareUrl, id);
       })
       .catch(function (err) {
         console.error('saveDesign error:', err);
@@ -706,6 +705,24 @@
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      共有モーダル
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ID コピーボタン */
+  var shareIdCopyTimer = null;
+  document.getElementById('share-id-copy-btn').addEventListener('click', function () {
+    var idText = document.getElementById('share-id-code').textContent;
+    var onCopied = function () {
+      var msg = document.getElementById('share-id-copy-msg');
+      msg.classList.add('visible');
+      clearTimeout(shareIdCopyTimer);
+      shareIdCopyTimer = setTimeout(function () { msg.classList.remove('visible'); }, 2500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(idText).then(onCopied);
+    } else {
+      try { document.execCommand('copy'); onCopied(); } catch (e) {}
+    }
+  });
+
+  /* URL コピーボタン */
   var shareCopyTimer = null;
   shareCopyBtn.addEventListener('click', function () {
     var url = shareUrlInput.value;
