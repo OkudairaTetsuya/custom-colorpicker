@@ -503,28 +503,6 @@
       }
     });
 
-    /* clipPath をdefs に追加（テキストのはみ出しをマスク） */
-    var defs = doc.querySelector('defs');
-    if (!defs) {
-      defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
-      svgEl.insertBefore(defs, svgEl.firstChild);
-    }
-    var cp   = doc.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
-    cp.setAttribute('id', 'canvas-clip');
-    var cr   = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    cr.setAttribute('x', '0'); cr.setAttribute('y', '0');
-    cr.setAttribute('width', String(pxW)); cr.setAttribute('height', String(pxH));
-    cp.appendChild(cr);
-    defs.appendChild(cp);
-
-    /* defs・desc 以外の直接子要素すべてに clipPath を適用 */
-    Array.from(svgEl.childNodes).forEach(function (node) {
-      if (node.nodeType !== 1) return;
-      var tag = node.tagName.toLowerCase();
-      if (tag === 'defs' || tag === 'desc') return;
-      node.setAttribute('clip-path', 'url(#canvas-clip)');
-    });
-
     return new XMLSerializer().serializeToString(doc);
   }
 
@@ -563,6 +541,20 @@
 
       /* texture / frame (Image) を除去 */
       fc.getObjects('image').forEach(function (img) { fc.remove(img); });
+
+      /* キャンバス境界からはみ出しているテキストを完全に削除
+         getBoundingRect(true, true) = 絶対座標・回転考慮済みのバウンディングボックス */
+      var cW = fc.width, cH = fc.height;
+      fc.getObjects().filter(function (o) {
+        return o.type === 'i-text' || o.type === 'text';
+      }).forEach(function (obj) {
+        var b = obj.getBoundingRect(true, true);
+        if (b.left < 0 || b.top < 0 ||
+            b.left + b.width  > cW ||
+            b.top  + b.height > cH) {
+          fc.remove(obj);
+        }
+      });
       fc.renderAll();
 
       /* SVG 生成 → 正規化・クリップ → テキストパス化 → ダウンロード */
