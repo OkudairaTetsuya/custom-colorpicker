@@ -765,11 +765,31 @@
     var previewBlob = dataURLtoBlob(previewDataUrl);
     var filename    = id + '.jpg';
 
+    /* プレビュー画像生成 */
+    var previewDataUrl;
+    try {
+      previewDataUrl = canvas.toDataURL({
+        format    : 'jpeg',
+        quality   : 0.75,
+        multiplier: 500 / CANVAS_W,
+      });
+    } catch (ex) {
+      console.error('toDataURL failed:', ex);
+      showError('プレビュー生成に失敗しました：' + (ex.message || ex));
+      setBtnLoading(false);
+      return;
+    }
+    var previewBlob = dataURLtoBlob(previewDataUrl);
+    var filename    = id + '.jpg';
+
     supabaseClient.storage
       .from('previews')
       .upload(filename, previewBlob, { contentType: 'image/jpeg', upsert: false })
       .then(function (uploadResult) {
-        if (uploadResult.error) throw uploadResult.error;
+        if (uploadResult.error) {
+          console.error('storage upload error:', uploadResult.error);
+          throw new Error('[ストレージ] ' + uploadResult.error.message);
+        }
 
         var urlResult  = supabaseClient.storage.from('previews').getPublicUrl(filename);
         var publicUrl  = urlResult.data.publicUrl;
@@ -788,7 +808,10 @@
         });
       })
       .then(function (insertResult) {
-        if (insertResult.error) throw insertResult.error;
+        if (insertResult.error) {
+          console.error('db insert error:', insertResult.error);
+          throw new Error('[DB] ' + insertResult.error.message);
+        }
 
         var shareUrl = location.origin + location.pathname + '?id=' + id;
         setBtnLoading(false);
