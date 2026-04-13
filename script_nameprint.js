@@ -10,6 +10,20 @@
   var CANVAS_H = 600;
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     ブランド表示順設定
+     ここに書いた順番で上から表示。未記載のブランドはアルファベット順で末尾に追加。
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var BRAND_ORDER = [
+    'Apple',
+    'Samsung',
+    'Google',
+    'Sony',
+    'Sharp',
+    'OPPO',
+    'その他',
+  ];
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      Supabase クライアント
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   var supabaseClient = (
@@ -279,9 +293,19 @@
           brandGroups[brand].push(m);
         });
 
+        /* ブランドをBRAND_ORDER順にソート（未記載はアルファベット順で末尾） */
+        var sortedBrands = Object.keys(brandGroups).sort(function (a, b) {
+          var ai = BRAND_ORDER.indexOf(a);
+          var bi = BRAND_ORDER.indexOf(b);
+          if (ai === -1 && bi === -1) return a.localeCompare(b, 'ja');
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
+        });
+
         /* ブランドボタンを生成 */
         brandGridEl.innerHTML = '';
-        Object.keys(brandGroups).sort().forEach(function (brand) {
+        sortedBrands.forEach(function (brand) {
           var b = document.createElement('button');
           b.type      = 'button';
           b.className = 'brand-btn';
