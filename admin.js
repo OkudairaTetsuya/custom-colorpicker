@@ -542,18 +542,14 @@
       /* texture / frame (Image) を除去 */
       fc.getObjects('image').forEach(function (img) { fc.remove(img); });
 
-      /* キャンバス境界からはみ出しているテキストを完全に削除
-         getBoundingRect(true, true) = 絶対座標・回転考慮済みのバウンディングボックス */
-      var cW = fc.width, cH = fc.height;
-      fc.getObjects().filter(function (o) {
-        return o.type === 'i-text' || o.type === 'text';
-      }).forEach(function (obj) {
-        var b = obj.getBoundingRect(true, true);
-        if (b.left < 0 || b.top < 0 ||
-            b.left + b.width  > cW ||
-            b.top  + b.height > cH) {
-          fc.remove(obj);
-        }
+      /* キャンバス全体に clipPath を設定 → toSVG() がはみ出し部分を自動クリップ
+         画面の見た目そのまま（部分的にはみ出した文字は見えている範囲だけ出力） */
+      fc.clipPath = new fabric.Rect({
+        left             : 0,
+        top              : 0,
+        width            : fc.width,
+        height           : fc.height,
+        absolutePositioned: true,
       });
       fc.renderAll();
 
