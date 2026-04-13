@@ -937,6 +937,96 @@
 .share-close-btn:active { background: var(--light); }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   テキストレイヤーパネル
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.layer-panel {
+  margin-top: 12px;
+}
+.layer-panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted, #AEAEB2);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.layer-panel-hint {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.layer-empty {
+  font-size: 13px;
+  color: var(--muted, #AEAEB2);
+  text-align: center;
+  padding: 14px 0;
+}
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  background: var(--light, #F5F5F7);
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.layer-item.active {
+  border-color: #007AFF;
+  background: #EAF2FF;
+}
+.layer-item.dragging {
+  opacity: 0.45;
+}
+.layer-item.drag-over {
+  border-color: #007AFF;
+  background: #DDEEFF;
+}
+.layer-drag-handle {
+  font-size: 16px;
+  color: var(--muted, #AEAEB2);
+  cursor: grab;
+  line-height: 1;
+  flex-shrink: 0;
+  padding: 2px 4px;
+  touch-action: none;
+}
+.layer-drag-handle:active { cursor: grabbing; }
+.layer-label {
+  flex: 1;
+  font-size: 13px;
+  font-family: var(--font);
+  color: var(--fg, #1C1C1E);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.layer-label-empty {
+  color: var(--muted, #AEAEB2);
+  font-style: italic;
+}
+.layer-del-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--muted, #AEAEB2);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: background 0.12s, color 0.12s;
+}
+.layer-del-btn:hover { background: rgba(255,59,48,0.1); color: #FF3B30; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    デザイン呼び出しフッター
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .recall-footer {

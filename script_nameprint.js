@@ -483,7 +483,10 @@
     canvas.renderAll();
   }
 
-  textInput.addEventListener('input', function () { updateText(this.value); });
+  textInput.addEventListener('input', function () {
+    updateText(this.value);
+    refreshLayerList();
+  });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      ビジュアルフォントグリッド
@@ -559,13 +562,120 @@
     canvas.renderAll();
   });
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     テキスト追加 / 削除
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  document.getElementById('add-text-btn').addEventListener('click', function () {
-    var existingTexts = canvas.getObjects().filter(function (o) {
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     テキストレイヤーパネル
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var layerListEl = document.getElementById('layer-list');
+  var layerDragSrc = null; /* ドラッグ中アイテムの canvas object */
+
+  function getTextObjects() {
+    return canvas.getObjects().filter(function (o) {
       return o.type === 'i-text' || o.type === 'text';
     });
+  }
+
+  function refreshLayerList() {
+    layerListEl.innerHTML = '';
+    var texts = getTextObjects();
+    if (texts.length === 0) {
+      var emp = document.createElement('p');
+      emp.className = 'layer-empty';
+      emp.textContent = 'テキストがありません';
+      layerListEl.appendChild(emp);
+      return;
+    }
+
+    /* 上レイヤー（高インデックス）を先頭に表示 */
+    var reversed = texts.slice().reverse();
+
+    reversed.forEach(function (obj) {
+      var item = document.createElement('div');
+      item.className = 'layer-item' + (obj === activeText ? ' active' : '');
+      item.draggable = true;
+
+      /* ドラッグハンドル */
+      var handle = document.createElement('span');
+      handle.className = 'layer-drag-handle';
+      handle.textContent = '⠿';
+      handle.title = 'ドラッグして順序を変更';
+
+      /* テキストラベル */
+      var lbl = document.createElement('span');
+      lbl.className = 'layer-label' + (obj.text ? '' : ' layer-label-empty');
+      lbl.textContent = obj.text || '（空）';
+
+      /* 削除ボタン */
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'layer-del-btn';
+      del.textContent = '✕';
+      del.addEventListener('click', function (e) {
+        e.stopPropagation();
+        canvas.remove(obj);
+        if (activeText === obj) { activeText = null; textInput.value = ''; }
+        canvas.renderAll();
+        refreshLayerList();
+      });
+
+      item.appendChild(handle);
+      item.appendChild(lbl);
+      item.appendChild(del);
+
+      /* クリックで選択 */
+      item.addEventListener('click', function () {
+        canvas.setActiveObject(obj);
+        canvas.renderAll();
+        syncControlsToText(obj);
+        refreshLayerList();
+      });
+
+      /* HTML5 drag-and-drop */
+      item.addEventListener('dragstart', function (e) {
+        layerDragSrc = obj;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      item.addEventListener('dragend', function () {
+        item.classList.remove('dragging');
+        layerListEl.querySelectorAll('.layer-item').forEach(function (i) {
+          i.classList.remove('drag-over');
+        });
+      });
+      item.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (obj !== layerDragSrc) item.classList.add('drag-over');
+      });
+      item.addEventListener('dragleave', function () {
+        item.classList.remove('drag-over');
+      });
+      item.addEventListener('drop', function (e) {
+        e.stopPropagation();
+        item.classList.remove('drag-over');
+        if (!layerDragSrc || layerDragSrc === obj) return;
+        /* ドロップ先インデックスにソースを移動 */
+        var targetIdx = canvas.getObjects().indexOf(obj);
+        canvas.moveTo(layerDragSrc, targetIdx);
+        if (frameObj) canvas.bringToFront(frameObj);
+        canvas.renderAll();
+        layerDragSrc = null;
+        refreshLayerList();
+      });
+
+      layerListEl.appendChild(item);
+    });
+  }
+
+  /* テキスト選択/解除でパネルも更新 */
+  canvas.on('selection:created',  function () { refreshLayerList(); });
+  canvas.on('selection:updated',  function () { refreshLayerList(); });
+  canvas.on('selection:cleared',  function () { refreshLayerList(); });
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     テキスト追加
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  document.getElementById('add-text-btn').addEventListener('click', function () {
+    var existingTexts = getTextObjects();
     var offset = existingTexts.length * 70;
     var newText = new fabric.IText('', {
       left      : CANVAS_W / 2,
@@ -587,14 +697,7 @@
     activeText = newText;
     textInput.value = '';
     textInput.focus();
-  });
-
-  document.getElementById('del-text-btn').addEventListener('click', function () {
-    if (!activeText) return;
-    canvas.remove(activeText);
-    activeText = null;
-    textInput.value = '';
-    canvas.renderAll();
+    refreshLayerList();
   });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -802,6 +905,7 @@
             });
             if (activeText) syncControlsToText(activeText);
             canvas.renderAll();
+            refreshLayerList();
             showLoadOverlay(false);
           });
 
@@ -1008,6 +1112,8 @@
 
   /* 機種リスト読み込み */
   loadModelList();
+  /* レイヤーパネル初期表示 */
+  refreshLayerList();
   /* URLにidが含まれている場合はデザイン復元 */
   if (new URLSearchParams(location.search).get('id')) loadDesignFromUrl();
 
