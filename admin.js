@@ -404,11 +404,16 @@
   function loadOtFont(family) {
     if (fontCache[family]) return Promise.resolve(fontCache[family]);
     var url = FONT_WOFF[family] || FONT_WOFF['Roboto'];
-    return new Promise(function (resolve, reject) {
-      opentype.load(url, function (err, font) {
-        if (err) { reject(err); } else { fontCache[family] = font; resolve(font); }
+    return fetch(url)
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + url);
+        return res.arrayBuffer();
+      })
+      .then(function (buf) {
+        var font = opentype.parse(buf);
+        fontCache[family] = font;
+        return font;
       });
-    });
   }
 
   /* "matrix(a b c d e f)" をパース */
@@ -465,19 +470,15 @@
       var allText = Array.from(textEl.querySelectorAll('tspan'))
         .map(function (ts) { return ts.textContent; }).join('');
 
-      /* フォント読み込み → パス生成、CJK文字で空になったらフォールバック */
-      return loadOtFont(family).then(function (font) {
-        var dAttr = tryFont(font);
+      /* CJK文字を含む場合は最初から日本語フォントを使う
+         （Roboto で変換すると .notdef 箱になりフォールバックが発動しないため） */
+      var CJK_FONTS = { 'Noto Serif JP': true, 'Noto Sans': true };
+      var effectiveFamily = (hasCjk(allText) && !CJK_FONTS[family])
+        ? 'Noto Serif JP'
+        : family;
 
-        /* dAttr が空（グリフ未収録）かつ CJK 文字を含む場合は日本語フォントで再試行 */
-        if (!dAttr && hasCjk(allText)) {
-          var cjkFamily = 'Noto Serif JP';
-          return loadOtFont(cjkFamily).then(function (cjkFont) {
-            return tryFont(cjkFont);
-          }).catch(function () { return ''; });
-        }
-        return dAttr;
-
+      return loadOtFont(effectiveFamily).then(function (font) {
+        return tryFont(font);
       }).then(function (dAttr) {
         if (!dAttr || !parentG || !parentG.parentElement) return;
         var pathEl = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
