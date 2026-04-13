@@ -493,6 +493,39 @@
     return new XMLSerializer().serializeToString(doc);
   }
 
+  /* テキストパス化後のSVGにclipPathを追加（はみ出しをIllustratorでも確実にマスク） */
+  function applyClipPath(svgStr, pxW, pxH) {
+    var parser = new DOMParser();
+    var doc    = parser.parseFromString(svgStr, 'image/svg+xml');
+    var svgEl  = doc.querySelector('svg');
+    if (!svgEl) return svgStr;
+
+    var defs = doc.querySelector('defs');
+    if (!defs) {
+      defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      svgEl.insertBefore(defs, svgEl.firstChild);
+    }
+
+    /* clipPath 矩形をキャンバスサイズで定義 */
+    var cp = doc.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+    cp.setAttribute('id', 'canvas-clip');
+    var cr = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    cr.setAttribute('x', '0'); cr.setAttribute('y', '0');
+    cr.setAttribute('width', String(pxW)); cr.setAttribute('height', String(pxH));
+    cp.appendChild(cr);
+    defs.appendChild(cp);
+
+    /* defs・desc 以外の全直接子に clip-path を適用 */
+    Array.from(svgEl.childNodes).forEach(function (node) {
+      if (node.nodeType !== 1) return;
+      var tag = node.tagName.toLowerCase();
+      if (tag === 'defs' || tag === 'desc') return;
+      node.setAttribute('clip-path', 'url(#canvas-clip)');
+    });
+
+    return new XMLSerializer().serializeToString(doc);
+  }
+
   /* 絵文字を含む文字列かチェック */
   function containsEmoji(str) {
     return /\p{Emoji_Presentation}|\p{Extended_Pictographic}/u.test(str);
@@ -528,27 +561,23 @@
 
       /* texture / frame (Image) を除去 */
       fc.getObjects('image').forEach(function (img) { fc.remove(img); });
-
-      /* キャンバス全体に clipPath を設定 → toSVG() がはみ出し部分を自動クリップ
-         画面の見た目そのまま（部分的にはみ出した文字は見えている範囲だけ出力） */
-      fc.clipPath = new fabric.Rect({
-        left             : 0,
-        top              : 0,
-        width            : fc.width,
-        height           : fc.height,
-        absolutePositioned: true,
-      });
       fc.renderAll();
 
-      /* SVG 生成 → 正規化・クリップ → テキストパス化 → ダウンロード */
+      /* キャンバスのピクセル寸法を保存（後でclipPath生成に使用） */
+      var cW = fc.width, cH = fc.height;
+
+      /* SVG 生成 → mm正規化 → テキストパス化 → clipPath適用 → ダウンロード
+         ※ clipPath は textToPath の後に適用する（パス化と干渉しないよう分離） */
       var rawSvg = fc.toSVG();
       var mmSvg  = processSvg(rawSvg, model.widthMm, model.heightMm);
 
-      textToPath(mmSvg).then(function (finalSvg) {
+      textToPath(mmSvg).then(function (pathSvg) {
+        /* テキストパス化済みSVGにclipPathを追加してはみ出しを除去 */
+        var finalSvg = applyClipPath(pathSvg, cW, cH);
         var date     = new Date(design.created_at || Date.now())
           .toISOString().slice(0, 10).replace(/-/g, '');
-        var safeName = (model.name || 'unknown').replace(/\s+/g, '_');
-        var filename = design.id.slice(0, 8) + '_' + safeName + '_' + date + '.svg';
+        var safeName  = (model.name || 'unknown').replace(/\s+/g, '_');
+        var filename  = design.id.slice(0, 8) + '_' + safeName + '_' + date + '.svg';
 
         var blob = new Blob([finalSvg], { type: 'image/svg+xml;charset=utf-8' });
         var url  = URL.createObjectURL(blob);
