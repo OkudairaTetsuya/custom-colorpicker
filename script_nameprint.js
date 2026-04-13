@@ -14,13 +14,11 @@
      ここに書いた順番で上から表示。未記載のブランドはアルファベット順で末尾に追加。
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   var BRAND_ORDER = [
-    'Apple',
-    'Samsung',
-    'Google',
-    'Sony',
-    'Sharp',
-    'OPPO',
-    'その他',
+    'iPhone',
+    'Google Pixel',
+    'Galaxy',
+    'Arrows',
+    'AQUOS',
   ];
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
