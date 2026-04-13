@@ -190,9 +190,34 @@
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      機種選択
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  var modelSelectEl    = document.getElementById('model-select');
+  var modelSelectEl     = document.getElementById('model-select');
+  var modelSelectRow    = document.getElementById('model-select-row');
+  var modelSelectedBar  = document.getElementById('model-selected-bar');
+  var modelSelectedName = document.getElementById('model-selected-name');
+  var modelChangeBtn    = document.getElementById('model-change-btn');
   var canvasPlaceholder = document.getElementById('canvas-placeholder');
-  var modelMap         = {}; /* id → model オブジェクト */
+  var modelMap          = {}; /* id → model オブジェクト */
+
+  /* 機種選択済みチップを表示してキャンバスまでスクロール */
+  function showModelChip(name) {
+    modelSelectRow.style.display = 'none';
+    modelSelectedName.textContent = name;
+    modelSelectedBar.classList.add('visible');
+    /* キャンバス上端をsave-bar直下に合わせてスクロール */
+    setTimeout(function () {
+      var rect = canvasStage.getBoundingClientRect();
+      var saveBarH = 56;
+      var target = window.scrollY + rect.top - saveBarH - 8;
+      window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+    }, 80);
+  }
+
+  /* 「変更」押下でドロップダウンに戻す */
+  modelChangeBtn.addEventListener('click', function () {
+    modelSelectedBar.classList.remove('visible');
+    modelSelectRow.style.display = 'block';
+    modelSelectEl.focus();
+  });
 
   function applyModel(model) {
     currentModel = model;
@@ -203,8 +228,14 @@
 
   modelSelectEl.addEventListener('change', function () {
     var model = modelMap[this.value];
-    if (model) applyModel(model);
-    else canvasPlaceholder.style.display = 'flex';
+    if (model) {
+      applyModel(model);
+      showModelChip(model.name);
+    } else {
+      canvasPlaceholder.style.display = 'flex';
+      modelSelectedBar.classList.remove('visible');
+      modelSelectRow.style.display = 'block';
+    }
   });
 
   function loadModelList() {
@@ -667,6 +698,7 @@
                 if (!mr.error && mr.data) {
                   applyModel(mr.data);
                   modelSelectEl.value = mr.data.id;
+                  showModelChip(mr.data.name);
                 }
               })
           : Promise.resolve();

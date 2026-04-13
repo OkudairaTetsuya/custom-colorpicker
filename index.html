@@ -36,10 +36,15 @@
         <div class="card" id="card-preview">
           <div class="preview-inner">
             <!-- 機種選択ドロップダウン -->
-            <div class="model-select-row">
+            <div class="model-select-row" id="model-select-row">
               <select id="model-select" class="model-select-dropdown">
                 <option value="">— 機種を選択 —</option>
               </select>
+            </div>
+            <!-- 機種選択済みチップ（選択後に表示） -->
+            <div class="model-selected-bar" id="model-selected-bar">
+              <span class="model-selected-name" id="model-selected-name"></span>
+              <button class="model-change-btn" id="model-change-btn" type="button">変更</button>
             </div>
             <div class="canvas-stage" id="canvas-stage">
               <div class="canvas-wrap" id="canvas-wrap">
