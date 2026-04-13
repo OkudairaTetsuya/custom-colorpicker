@@ -765,6 +765,19 @@
   document.getElementById('step-next-btn').addEventListener('click', function () {
     if (currentStep < totalSteps - 1) {
       goToStep(currentStep + 1);
+    } else {
+      /* 完了: トップへスクロール → 保存ボタンをバウンス */
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(function () {
+        var btn = document.getElementById('save-btn');
+        if (!btn) return;
+        btn.classList.remove('bounce');
+        void btn.offsetWidth; /* アニメーションリセット */
+        btn.classList.add('bounce');
+        btn.addEventListener('animationend', function () {
+          btn.classList.remove('bounce');
+        }, { once: true });
+      }, 400); /* スクロール開始後に発火 */
     }
   });
 
