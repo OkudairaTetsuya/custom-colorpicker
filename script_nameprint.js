@@ -566,7 +566,6 @@
      テキストレイヤーパネル
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   var layerListEl = document.getElementById('layer-list');
-  var layerDragSrc = null; /* ドラッグ中アイテムの canvas object */
 
   function getTextObjects() {
     return canvas.getObjects().filter(function (o) {
@@ -587,22 +586,45 @@
 
     /* 上レイヤー（高インデックス）を先頭に表示 */
     var reversed = texts.slice().reverse();
+    var total = reversed.length;
 
-    reversed.forEach(function (obj) {
+    reversed.forEach(function (obj, listIdx) {
       var item = document.createElement('div');
       item.className = 'layer-item' + (obj === activeText ? ' active' : '');
-      item.draggable = true;
-
-      /* ドラッグハンドル */
-      var handle = document.createElement('span');
-      handle.className = 'layer-drag-handle';
-      handle.textContent = '⠿';
-      handle.title = 'ドラッグして順序を変更';
 
       /* テキストラベル */
       var lbl = document.createElement('span');
       lbl.className = 'layer-label' + (obj.text ? '' : ' layer-label-empty');
       lbl.textContent = obj.text || '（空）';
+
+      /* 上へボタン（リスト上 = z-order高く） */
+      var upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.className = 'layer-order-btn';
+      upBtn.textContent = '▲';
+      upBtn.disabled = listIdx === 0;
+      upBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var curIdx = canvas.getObjects().indexOf(obj);
+        canvas.moveTo(obj, curIdx + 1);
+        if (frameObj) canvas.bringToFront(frameObj);
+        canvas.renderAll();
+        refreshLayerList();
+      });
+
+      /* 下へボタン */
+      var downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.className = 'layer-order-btn';
+      downBtn.textContent = '▼';
+      downBtn.disabled = listIdx === total - 1;
+      downBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var curIdx = canvas.getObjects().indexOf(obj);
+        if (curIdx > 0) canvas.moveTo(obj, curIdx - 1);
+        canvas.renderAll();
+        refreshLayerList();
+      });
 
       /* 削除ボタン */
       var del = document.createElement('button');
@@ -617,8 +639,9 @@
         refreshLayerList();
       });
 
-      item.appendChild(handle);
       item.appendChild(lbl);
+      item.appendChild(upBtn);
+      item.appendChild(downBtn);
       item.appendChild(del);
 
       /* クリックで選択 */
@@ -626,39 +649,6 @@
         canvas.setActiveObject(obj);
         canvas.renderAll();
         syncControlsToText(obj);
-        refreshLayerList();
-      });
-
-      /* HTML5 drag-and-drop */
-      item.addEventListener('dragstart', function (e) {
-        layerDragSrc = obj;
-        item.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-      });
-      item.addEventListener('dragend', function () {
-        item.classList.remove('dragging');
-        layerListEl.querySelectorAll('.layer-item').forEach(function (i) {
-          i.classList.remove('drag-over');
-        });
-      });
-      item.addEventListener('dragover', function (e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        if (obj !== layerDragSrc) item.classList.add('drag-over');
-      });
-      item.addEventListener('dragleave', function () {
-        item.classList.remove('drag-over');
-      });
-      item.addEventListener('drop', function (e) {
-        e.stopPropagation();
-        item.classList.remove('drag-over');
-        if (!layerDragSrc || layerDragSrc === obj) return;
-        /* ドロップ先インデックスにソースを移動 */
-        var targetIdx = canvas.getObjects().indexOf(obj);
-        canvas.moveTo(layerDragSrc, targetIdx);
-        if (frameObj) canvas.bringToFront(frameObj);
-        canvas.renderAll();
-        layerDragSrc = null;
         refreshLayerList();
       });
 
