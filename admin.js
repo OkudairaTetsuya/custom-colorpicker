@@ -673,8 +673,9 @@
   }
 
   /* 絵文字を含む文字列かチェック */
+  /* ♥(U+2665) と ♡(U+2661) は除外して絵文字チェック */
   function containsEmoji(str) {
-    return /\p{Emoji_Presentation}|\p{Extended_Pictographic}/u.test(str);
+    return /\p{Emoji_Presentation}|\p{Extended_Pictographic}/u.test(str.replace(/[♥♡]/g, ''));
   }
 
   /* エクスポートメイン */

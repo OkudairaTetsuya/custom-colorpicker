@@ -488,12 +488,22 @@
     canvas.renderAll();
   }
 
+  /* ♥(U+2665) と ♡(U+2661) は絵文字扱いせず許可 */
   var emojiRe = /\p{Emoji_Presentation}|\p{Extended_Pictographic}/u;
 
   textInput.addEventListener('input', function () {
-    if (emojiRe.test(this.value)) {
+    /* ♥️ の絵文字バリアントセレクタ(U+FE0F)を除去してテキスト表示に変換 */
+    this.value = this.value.replace(/([♥♡])\uFE0F/g, '$1');
+    /* ♥♡ を一時退避 → 絵文字除去 → 復元 */
+    if (emojiRe.test(this.value.replace(/[♥♡]/g, ''))) {
+      var hearts = [];
+      this.value = this.value.replace(/[♥♡]/g, function (m) {
+        hearts.push(m); return '\x00';
+      });
       this.value = this.value.replace(new RegExp(emojiRe.source, 'gu'), '');
-      showError('絵文字はご利用いただけません');
+      var hi = 0;
+      this.value = this.value.replace(/\x00/g, function () { return hearts[hi++] || ''; });
+      showError('絵文字はご利用いただけません（♥♡は使用可能です）');
     }
     updateText(this.value);
     refreshLayerList();
