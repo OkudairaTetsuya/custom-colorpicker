@@ -1,9 +1,9 @@
 // Vercel ビルド時に環境変数から supabase.config.js を生成するスクリプト
 const fs = require('fs');
 
-const url   = process.env.SUPABASE_URL      || '';
-const key   = process.env.SUPABASE_ANON_KEY || '';
-const admin = process.env.ADMIN_PASSWORD    || '';
+const url   = (process.env.SUPABASE_URL      || '').trim();
+const key   = (process.env.SUPABASE_ANON_KEY || '').trim();
+const admin = (process.env.ADMIN_PASSWORD    || '').trim();
 
 if (!url || !key) {
   console.error('ERROR: SUPABASE_URL / SUPABASE_ANON_KEY が設定されていません');
