@@ -498,20 +498,49 @@
       /* CJK 文字を含むか判定（日本語フォールバック選択に使用） */
       function hasCjk(str) { return /[\u3000-\u9FFF\uF900-\uFAFF]/.test(str); }
 
+      /* 2D アフィン行列をパスコマンドに手動適用（opentype.js 版依存を避けるため） */
+      function applyMatrix(p) {
+        p.commands.forEach(function (cmd) {
+          if (cmd.x !== undefined) {
+            var nx = m.a * cmd.x + m.c * cmd.y + m.e;
+            var ny = m.b * cmd.x + m.d * cmd.y + m.f;
+            cmd.x = nx; cmd.y = ny;
+          }
+          if (cmd.x1 !== undefined) {
+            var nx1 = m.a * cmd.x1 + m.c * cmd.y1 + m.e;
+            var ny1 = m.b * cmd.x1 + m.d * cmd.y1 + m.f;
+            cmd.x1 = nx1; cmd.y1 = ny1;
+          }
+          if (cmd.x2 !== undefined) {
+            var nx2 = m.a * cmd.x2 + m.c * cmd.y2 + m.e;
+            var ny2 = m.b * cmd.x2 + m.d * cmd.y2 + m.f;
+            cmd.x2 = nx2; cmd.y2 = ny2;
+          }
+        });
+      }
+
       /* フォントを試してパスデータを生成するヘルパー */
       function tryFont(font) {
-        var dAttr = '';
-        Array.from(textEl.querySelectorAll('tspan')).forEach(function (ts) {
+        var dAttr  = '';
+        var errMsg = '';
+        var tspans = Array.from(textEl.querySelectorAll('tspan'));
+        if (!tspans.length) tspans = [textEl]; /* tspan なしの場合は text 自体を使う */
+        tspans.forEach(function (ts) {
+          var text = ts.textContent;
+          if (!text) return;
+          var tx = parseFloat(ts.getAttribute('x') || textEl.getAttribute('x') || '0');
+          var ty = parseFloat(ts.getAttribute('y') || textEl.getAttribute('y') || '0');
+          /* font-size は tspan 優先、なければ text 要素の値を使う */
+          var tsFontSize = parseFloat(ts.getAttribute('font-size') || '') || fontSize;
           try {
-            var text = ts.textContent;
-            if (!text) return;
-            var tx = parseFloat(ts.getAttribute('x') || '0');
-            var ty = parseFloat(ts.getAttribute('y') || '0');
-            var p  = font.getPath(text, tx, ty, fontSize);
-            p.transform(m.a, m.b, m.c, m.d, m.e, m.f);
+            var p = font.getPath(text, tx, ty, tsFontSize);
+            applyMatrix(p);
             dAttr += p.toPathData(3);
-          } catch (e) { /* 変換不能な文字はスキップ */ }
+          } catch (e) {
+            errMsg = (e && e.message) ? e.message : String(e);
+          }
         });
+        if (errMsg) showToast('文字変換エラー: ' + effectiveFamily + ' — ' + errMsg, 'error');
         return dAttr;
       }
 
@@ -529,15 +558,20 @@
       return loadOtFont(effectiveFamily).then(function (font) {
         return tryFont(font);
       }).then(function (dAttr) {
-        if (!dAttr || !parentG || !parentG.parentElement) return;
+        if (!dAttr) {
+          /* パスデータが空 = フォントは読めたが字形が生成されなかった */
+          showToast('パスなし: ' + effectiveFamily + ' "' + allText.slice(0, 10) + '"', 'error');
+          return;
+        }
+        if (!parentG || !parentG.parentElement) return;
         var pathEl = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
         pathEl.setAttribute('d',       dAttr);
-        pathEl.setAttribute('fill',    fill);
+        pathEl.setAttribute('fill',    fill || textEl.getAttribute('fill') || '#000000');
         pathEl.setAttribute('opacity', opacity);
         parentG.parentElement.replaceChild(pathEl, parentG);
 
       }).catch(function (err) {
-        showToast('アウトライン化失敗: ' + effectiveFamily + (err ? ' — ' + (err.message || err) : ''), 'error');
+        showToast('アウトライン化失敗: ' + effectiveFamily + ' — ' + (err ? (err.message || err) : '不明'), 'error');
       });
     });
 
