@@ -436,6 +436,9 @@
       'https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-jp@5/files/noto-serif-jp-japanese-400-normal.woff',
     'Noto Sans':
       'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5/files/noto-sans-jp-japanese-400-normal.woff',
+    /* ♥♡☆★など記号のフォールバック用シンボルフォント */
+    '_symbol':
+      'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-symbols@5/files/noto-sans-symbols-symbols-400-normal.woff',
   };
 
   function loadOtFont(family) {
@@ -519,26 +522,36 @@
         });
       }
 
-      /* フォントを試してパスデータを生成するヘルパー */
-      function tryFont(font) {
+      /* 1文字ずつフォントを選んでパスを生成（シンボルフォントへのフォールバック対応）
+         - プライマリフォントにグリフがない文字は symbolFont を使用
+         - サロゲートペア（絵文字など）も Array.from で正しく分割 */
+      function tryFont(font, symbolFont) {
         var dAttr  = '';
         var errMsg = '';
         var tspans = Array.from(textEl.querySelectorAll('tspan'));
-        if (!tspans.length) tspans = [textEl]; /* tspan なしの場合は text 自体を使う */
+        if (!tspans.length) tspans = [textEl];
         tspans.forEach(function (ts) {
           var text = ts.textContent;
           if (!text) return;
           var tx = parseFloat(ts.getAttribute('x') || textEl.getAttribute('x') || '0');
           var ty = parseFloat(ts.getAttribute('y') || textEl.getAttribute('y') || '0');
-          /* font-size は tspan 優先、なければ text 要素の値を使う */
           var tsFontSize = parseFloat(ts.getAttribute('font-size') || '') || fontSize;
-          try {
-            var p = font.getPath(text, tx, ty, tsFontSize);
-            applyMatrix(p);
-            dAttr += p.toPathData(3);
-          } catch (e) {
-            errMsg = (e && e.message) ? e.message : String(e);
-          }
+          var x = tx;
+          Array.from(text).forEach(function (ch) {
+            try {
+              /* グリフが存在するフォントを選択 */
+              var useFont = font;
+              if (font.charToGlyph(ch).index === 0 && symbolFont) {
+                if (symbolFont.charToGlyph(ch).index !== 0) useFont = symbolFont;
+              }
+              var p = useFont.getPath(ch, x, ty, tsFontSize);
+              applyMatrix(p);
+              dAttr += p.toPathData(3);
+              x += useFont.getAdvanceWidth(ch, tsFontSize);
+            } catch (e) {
+              errMsg = (e && e.message) ? e.message : String(e);
+            }
+          });
         });
         if (errMsg) showToast('文字変換エラー: ' + effectiveFamily + ' — ' + errMsg, 'error');
         return dAttr;
@@ -555,8 +568,11 @@
         ? 'Noto Serif JP'
         : family;
 
-      return loadOtFont(effectiveFamily).then(function (font) {
-        return tryFont(font);
+      return Promise.all([
+        loadOtFont(effectiveFamily),
+        loadOtFont('_symbol').catch(function () { return null; }), /* 失敗しても続行 */
+      ]).then(function (results) {
+        return tryFont(results[0], results[1]);
       }).then(function (dAttr) {
         if (!dAttr) {
           /* パスデータが空 = フォントは読めたが字形が生成されなかった */
