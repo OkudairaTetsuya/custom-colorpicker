@@ -17,9 +17,9 @@ if (!admin) {
 fs.writeFileSync(
   'supabase.config.js',
   [
-    `window.SUPABASE_URL      = '${url}';`,
-    `window.SUPABASE_ANON_KEY = '${key}';`,
-    `window.ADMIN_PASSWORD    = '${admin}';`,
+    `window.SUPABASE_URL      = ${JSON.stringify(url)};`,
+    `window.SUPABASE_ANON_KEY = ${JSON.stringify(key)};`,
+    `window.ADMIN_PASSWORD    = ${JSON.stringify(admin)};`,
   ].join('\n') + '\n'
 );
 
