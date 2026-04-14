@@ -17,8 +17,9 @@
     'iPhone',
     'Google Pixel',
     'Galaxy',
-    'Arrows',
     'AQUOS',
+    'Arrows',
+    'Kyocera',
   ];
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -283,12 +284,19 @@
   }
 
   function loadModelList() {
-    if (!supabaseClient) return;
+    if (!supabaseClient) {
+      showError('Supabase が未設定のため機種リストを読み込めません');
+      return;
+    }
     supabaseClient.from('case_models')
       .select('*')
       .order('name', { ascending: true })
       .then(function (res) {
-        if (res.error || !res.data) return;
+        if (res.error) { showError('機種リスト取得失敗: ' + res.error.message); return; }
+        if (!res.data || res.data.length === 0) {
+          showError('機種が登録されていません。管理画面から追加してください。');
+          return;
+        }
 
         /* modelMap と brandGroups を構築 */
         res.data.forEach(function (m) {
