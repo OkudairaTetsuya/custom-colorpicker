@@ -436,10 +436,33 @@
       'https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-jp@5/files/noto-serif-jp-japanese-400-normal.woff',
     'Noto Sans':
       'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5/files/noto-sans-jp-japanese-400-normal.woff',
-    /* ♥♡☆★など記号のフォールバック用シンボルフォント */
-    '_symbol':
-      'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-symbols@5/files/noto-sans-symbols-symbols-400-normal.woff',
   };
+
+  /* シンボルフォント候補URL（順番に試す） */
+  var SYMBOL_FONT_URLS = [
+    'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-symbols@5/files/noto-sans-symbols-symbols-400-normal.woff',
+    'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-symbols@5/files/noto-sans-symbols-all-400-normal.woff',
+    'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-symbols-2@5/files/noto-sans-symbols-2-symbols-400-normal.woff',
+    'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-symbols-2@5/files/noto-sans-symbols-2-all-400-normal.woff',
+    /* DejaVu Sans TTF: ♥♡ を含む信頼性の高いフォールバック */
+    'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans.ttf',
+  ];
+
+  function loadSymbolFont() {
+    if (fontCache['_symbol']) return Promise.resolve(fontCache['_symbol']);
+    /* URLを順番に試して最初に成功したものを使う */
+    return SYMBOL_FONT_URLS.reduce(function (chain, url) {
+      return chain.catch(function () {
+        return fetch(url)
+          .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.arrayBuffer(); })
+          .then(function (buf) {
+            var font = opentype.parse(buf);
+            fontCache['_symbol'] = font;
+            return font;
+          });
+      });
+    }, Promise.reject(new Error('start')));
+  }
 
   function loadOtFont(family) {
     if (fontCache[family]) return Promise.resolve(fontCache[family]);
@@ -570,7 +593,7 @@
 
       return Promise.all([
         loadOtFont(effectiveFamily),
-        loadOtFont('_symbol').catch(function () { return null; }), /* 失敗しても続行 */
+        loadSymbolFont().catch(function () { return null; }), /* 失敗しても続行 */
       ]).then(function (results) {
         return tryFont(results[0], results[1]);
       }).then(function (dAttr) {
@@ -614,11 +637,14 @@
     var pxH = (vbParts.length >= 4 && vbParts[3] > 0) ? vbParts[3]
             : parseFloat(svgEl.getAttribute('height')) || 600;
 
-    /* mm 寸法を設定・viewBox を 0 起点に正規化 */
-    svgEl.setAttribute('width',    wMm + 'mm');
-    svgEl.setAttribute('height',   hMm + 'mm');
-    svgEl.setAttribute('viewBox',  '0 0 ' + pxW + ' ' + pxH);
-    svgEl.setAttribute('overflow', 'hidden');
+    /* mm 寸法を設定・viewBox を 0 起点に正規化
+       preserveAspectRatio="none" : viewBox と mm 寸法のアスペクト比が異なる場合に
+       Illustrator が xMidYMid meet でコンテンツを中央揃えしてズレるのを防ぐ */
+    svgEl.setAttribute('width',               wMm + 'mm');
+    svgEl.setAttribute('height',              hMm + 'mm');
+    svgEl.setAttribute('viewBox',             '0 0 ' + pxW + ' ' + pxH);
+    svgEl.setAttribute('preserveAspectRatio', 'none');
+    svgEl.removeAttribute('overflow'); /* overflow="hidden" は clip-path wrapper で代替 */
 
     return new XMLSerializer().serializeToString(doc);
   }
@@ -696,7 +722,9 @@
 
   /* エクスポートメイン */
   function exportSVG(design, model) {
-    /* 絵文字チェック: canvas_json 内のテキストを確認 */
+    /* 絵文字チェック & キャンバスサイズ取得 */
+    var savedCanvasW = CANVAS_W;
+    var savedCanvasH = CANVAS_H;
     try {
       var jsonObj = JSON.parse(design.canvas_json);
       var hasEmoji = (jsonObj.objects || []).some(function (o) {
@@ -704,6 +732,12 @@
       });
       if (hasEmoji) {
         if (!confirm('このデザインには絵文字が含まれています。\n絵文字は opentype.js でパス化できないため SVG に正しく出力されません。\n\nそのまま出力しますか？')) return;
+      }
+      /* キャンバス幅は常にmm比率から計算
+         → viewBoxとmm寸法のアスペクト比を一致させIllustratorのletterboxingを防ぐ */
+      if (model.widthMm && model.heightMm) {
+        savedCanvasH = CANVAS_H;
+        savedCanvasW = Math.round(CANVAS_H * model.widthMm / model.heightMm);
       }
     } catch (e) { /* JSON解析失敗は無視して続行 */ }
 
@@ -715,8 +749,8 @@
     document.body.appendChild(tmpEl);
 
     var fc = new fabric.Canvas(tmpEl, {
-      width              : CANVAS_W,
-      height             : CANVAS_H,
+      width              : savedCanvasW,
+      height             : savedCanvasH,
       enableRetinaScaling: false,
     });
 

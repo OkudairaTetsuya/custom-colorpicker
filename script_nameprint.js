@@ -172,7 +172,11 @@
 
     fabric.Image.fromURL(frameUrl, function (img) {
       var h = 600;
-      var w = Math.round(h * (img.width / img.height));
+      /* キャンバス幅はmm比率から計算（画像比率ではなく）
+         → フロント座標系とSVG出力のmm寸法が一致し、Illustratorでのズレを防ぐ */
+      var w = (currentModel && currentModel.widthMm && currentModel.heightMm)
+        ? Math.round(h * currentModel.widthMm / currentModel.heightMm)
+        : Math.round(h * (img.width / img.height));
       CANVAS_W = w; CANVAS_H = h;
       canvas.setWidth(w);
       canvas.setHeight(h);
@@ -776,9 +780,10 @@
 
     var id = generateId();
 
-    var canvasJson = JSON.stringify(
-      canvas.toJSON(['globalCompositeOperation', 'selectable', 'evented'])
-    );
+    var canvasData = canvas.toJSON(['globalCompositeOperation', 'selectable', 'evented']);
+    canvasData._canvasWidth  = CANVAS_W;
+    canvasData._canvasHeight = CANVAS_H;
+    var canvasJson = JSON.stringify(canvasData);
 
     var previewDataUrl = canvas.toDataURL({
       format    : 'jpeg',
