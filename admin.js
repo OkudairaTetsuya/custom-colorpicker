@@ -173,7 +173,9 @@
 
     /* 出力設定 */
     var tdExp = document.createElement('td');
-    tdExp.className = 'export-cell';
+
+    var expWrap = document.createElement('div');
+    expWrap.className = 'export-cell';
 
     var sel = document.createElement('select');
     sel.className = 'model-sel';
@@ -195,8 +197,9 @@
       });
     });
 
-    tdExp.appendChild(sel);
-    tdExp.appendChild(btn);
+    expWrap.appendChild(sel);
+    expWrap.appendChild(btn);
+    tdExp.appendChild(expWrap);
 
     tr.append(tdPrev, tdDate, tdText, tdId, tdColor, tdExp);
     return tr;
