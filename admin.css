@@ -266,6 +266,15 @@ body {
   flex-shrink  : 0;
 }
 
+/* デザインID */
+.design-id {
+  display    : block;
+  margin-top : 3px;
+  font-size  : 10px;
+  color      : #9ca3af;
+  word-break : break-all;
+}
+
 /* ガマット外バッジ */
 .gamut-badge {
   display        : inline-block;

@@ -140,10 +140,17 @@
       tdPrev.appendChild(img);
     } else { tdPrev.textContent = '—'; }
 
-    /* 作成日時 */
+    /* 作成日時 + ID */
     var tdDate = document.createElement('td');
-    tdDate.textContent = formatDate(d.created_at);
-    tdDate.className   = 'mono small';
+    tdDate.className = 'mono small';
+    var dateSpan = document.createElement('span');
+    dateSpan.textContent = formatDate(d.created_at);
+    var idSpan = document.createElement('span');
+    idSpan.className   = 'design-id';
+    idSpan.textContent = d.id || '—';
+    tdDate.appendChild(dateSpan);
+    tdDate.appendChild(document.createElement('br'));
+    tdDate.appendChild(idSpan);
 
     /* テキスト */
     var tdText = document.createElement('td');
