@@ -10,6 +10,132 @@
   var CANVAS_H = 600;
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     ガマット（印刷色域）チェック
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var gamut = {
+    originalHex : '#FFFFFF',
+    printHex    : '#FFFFFF',
+    deltaE      : 0,
+    isWarning   : false,
+    isPrint     : false,   /* 印刷プレビュー中か */
+  };
+
+  /* デバウンス：連続入力中は判定を遅延させてパフォーマンスを確保 */
+  function debounce(fn, ms) {
+    var t;
+    return function () {
+      var a = arguments, ctx = this;
+      clearTimeout(t);
+      t = setTimeout(function () { fn.apply(ctx, a); }, ms);
+    };
+  }
+
+  /**
+   * checkGamut(hex) → { printHex, deltaE, isWarning }
+   *
+   * Japan Color 2011 近似アルゴリズム:
+   *  1. RGB → CMYK 変換（chroma-js）
+   *  2. 総インク量制限 320%（日本カラー標準）
+   *  3. ドットゲイン補正（中間調で約20%増）
+   *  4. CMYK → RGB（再変換）
+   *  5. ΔE2000 で色差を計算
+   */
+  function checkGamut(hex) {
+    if (!window.chroma) return null;
+    try {
+      var orig = chroma(hex);
+      var cmyk = orig.cmyk();               /* [c,m,y,k] 0–1 */
+      var c = cmyk[0], m = cmyk[1], y = cmyk[2], k = cmyk[3];
+
+      /* 総インク制限 320% */
+      var total = c + m + y + k;
+      if (total > 3.2) {
+        var sc = 3.2 / total;
+        c *= sc; m *= sc; y *= sc; k *= sc;
+      }
+      k = Math.min(k, 0.95);  /* K単体上限 95% */
+
+      /* ドットゲイン補正（Yule-Nielsen 近似）*/
+      function dg(v) { return v + 0.18 * v * (1 - v); }
+      c = Math.min(1, dg(c));
+      m = Math.min(1, dg(m));
+      y = Math.min(1, dg(y));
+      k = Math.min(1, dg(k));
+
+      /* CMYK → RGB */
+      var r = Math.round(255 * (1 - c) * (1 - k));
+      var g = Math.round(255 * (1 - m) * (1 - k));
+      var b = Math.round(255 * (1 - y) * (1 - k));
+      var printed = chroma(r, g, b);
+
+      var dE = chroma.deltaE(orig, printed);
+
+      return {
+        printHex : printed.hex().toUpperCase(),
+        deltaE   : dE,
+        isWarning: dE > 4,   /* ΔE > 4 で警告（印刷業界標準の許容差は ΔE ≤ 3） */
+      };
+    } catch (e) { return null; }
+  }
+
+  /* DOM 参照（初期化前なので関数内で取得する） */
+  function getGamutEls() {
+    return {
+      warn    : document.getElementById('gamut-warning'),
+      detBtn  : document.getElementById('gamut-detail-btn'),
+      detail  : document.getElementById('gamut-detail'),
+      swRgb   : document.getElementById('gamut-swatch-rgb'),
+      swCmyk  : document.getElementById('gamut-swatch-cmyk'),
+      dText   : document.getElementById('gamut-delta-text'),
+      toggle  : document.getElementById('print-preview-toggle'),
+    };
+  }
+
+  /* 警告 UI を更新する */
+  function updateGamutUI(hex, result) {
+    var el = getGamutEls();
+    if (!el.warn) return;
+
+    if (!result || !result.isWarning) {
+      el.warn.classList.remove('visible');
+      /* 印刷プレビュー中なら元の色に戻す */
+      if (gamut.isPrint) {
+        gamut.isPrint = false;
+        if (el.toggle) el.toggle.checked = false;
+        canvas.backgroundColor = hex;
+        canvas.renderAll();
+      }
+      gamut.isWarning = false;
+      return;
+    }
+
+    /* 状態保存 */
+    gamut.originalHex = hex;
+    gamut.printHex    = result.printHex;
+    gamut.deltaE      = result.deltaE;
+    gamut.isWarning   = true;
+
+    /* スウォッチ更新 */
+    if (el.swRgb)  el.swRgb.style.background  = hex;
+    if (el.swCmyk) el.swCmyk.style.background = result.printHex;
+    if (el.dText)  el.dText.textContent = 'ΔE ' + result.deltaE.toFixed(1);
+
+    /* 印刷プレビュー中なら印刷色を即反映 */
+    if (gamut.isPrint) {
+      canvas.backgroundColor = result.printHex;
+      canvas.renderAll();
+    }
+
+    el.warn.classList.add('visible');
+  }
+
+  /* デバウンス版ガマットチェック（300ms） */
+  var debouncedGamutCheck = debounce(function (hex) {
+    var result = checkGamut(hex);
+    updateGamutUI(hex, result);
+  }, 300);
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      ブランド表示順設定
      ここに書いた順番で上から表示。未記載のブランドはアルファベット順で末尾に追加。
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -379,10 +505,16 @@
 
     var rgb = hsvToRgb(bgHue, bgSat, bgVal);
     var hex = rgbToHex(rgb[0], rgb[1], rgb[2]).toUpperCase();
-    canvas.backgroundColor = hex;
+
+    /* 印刷プレビュー中でなければキャンバスに反映 */
+    gamut.originalHex = hex;
+    canvas.backgroundColor = gamut.isPrint ? gamut.printHex : hex;
     canvas.renderAll();
     hexChip.style.backgroundColor = hex;
     hexCode.textContent = hex;
+
+    /* ガマット判定（デバウンス：ドラッグ中は重くならないよう遅延） */
+    debouncedGamutCheck(hex);
   }
 
   function getXY(e) {
@@ -823,16 +955,17 @@
         var publicUrl  = urlResult.data.publicUrl;
 
         return supabaseClient.from('designs').insert({
-          id          : id,
-          canvas_json : canvasJson,
-          base_color  : (canvas.backgroundColor || '#3399FF').toUpperCase(),
-          preview_url : publicUrl,
-          base_skin   : currentBase,
-          text_value  : textInput.value,
-          font_family : currentFont,
-          font_size   : currentSize,
-          text_color  : currentTextColor(),
-          model_id    : currentModel ? currentModel.id : null,
+          id              : id,
+          canvas_json     : canvasJson,
+          base_color      : (canvas.backgroundColor || '#3399FF').toUpperCase(),
+          preview_url     : publicUrl,
+          base_skin       : currentBase,
+          text_value      : textInput.value,
+          font_family     : currentFont,
+          font_size       : currentSize,
+          text_color      : currentTextColor(),
+          model_id        : currentModel ? currentModel.id : null,
+          is_out_of_gamut : gamut.isWarning,
         });
       })
       .then(function (insertResult) {
@@ -853,6 +986,32 @@
   }
 
   saveBtn.addEventListener('click', saveDesign);
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     ガマット UI イベント
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  (function () {
+    var el = getGamutEls();
+    if (!el.warn) return;
+
+    /* 「詳細を確認」トグル */
+    if (el.detBtn && el.detail) {
+      el.detBtn.addEventListener('click', function () {
+        var open = el.detail.classList.toggle('open');
+        el.detBtn.textContent = open ? '閉じる' : '詳細を確認';
+      });
+    }
+
+    /* 印刷プレビュートグル */
+    if (el.toggle) {
+      el.toggle.addEventListener('change', function () {
+        gamut.isPrint = this.checked;
+        if (!gamut.isWarning) return;
+        canvas.backgroundColor = gamut.isPrint ? gamut.printHex : gamut.originalHex;
+        canvas.renderAll();
+      });
+    }
+  }());
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      共有モーダル

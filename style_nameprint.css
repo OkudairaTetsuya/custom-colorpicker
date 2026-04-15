@@ -3,6 +3,113 @@
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ガマット警告 UI
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.gamut-warning {
+  display: none;            /* JS で show/hide */
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.gamut-warning.visible { display: block; }
+
+.gamut-warn-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.gamut-icon { font-size: 15px; flex-shrink: 0; line-height: 1.4; }
+.gamut-msg  { flex: 1; line-height: 1.5; color: #5d4037; min-width: 0; }
+.gamut-detail-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #e65100;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  line-height: 1.4;
+}
+.gamut-detail-btn:hover { color: #bf360c; }
+
+/* 詳細パネル（折りたたみ） */
+.gamut-detail {
+  display: none;
+  margin-top: 10px;
+}
+.gamut-detail.open { display: block; }
+
+.gamut-compare {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.gamut-swatch-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #888;
+}
+.gamut-swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,.12);
+}
+.gamut-arrow { font-size: 18px; color: #bbb; }
+.gamut-delta {
+  font-size: 11px;
+  color: #e65100;
+  font-weight: 600;
+  align-self: center;
+}
+
+/* 印刷プレビュー トグル */
+.gamut-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.gamut-toggle-input { display: none; }
+.gamut-toggle-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: #ccc;
+  border-radius: 10px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.gamut-toggle-thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  transition: left 0.2s;
+}
+.gamut-toggle-input:checked + .gamut-toggle-track {
+  background: #e65100;
+}
+.gamut-toggle-input:checked + .gamut-toggle-track .gamut-toggle-thumb {
+  left: 18px;
+}
+.gamut-toggle-label { font-size: 13px; color: #5d4037; font-weight: 600; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    固定保存バー
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .save-bar {

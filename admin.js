@@ -158,6 +158,13 @@
     code.textContent = (d.base_color || '').toUpperCase();
     tdColor.appendChild(swatch);
     tdColor.appendChild(code);
+    if (d.is_out_of_gamut) {
+      var gamutBadge = document.createElement('span');
+      gamutBadge.className   = 'gamut-badge';
+      gamutBadge.title       = 'CMYK印刷色再現外（ΔE>4）';
+      gamutBadge.textContent = '⚠ 色ズレ注意';
+      tdColor.appendChild(gamutBadge);
+    }
 
     /* 出力設定 */
     var tdExp = document.createElement('td');

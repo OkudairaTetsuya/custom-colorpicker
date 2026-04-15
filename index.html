@@ -144,6 +144,36 @@
                 <span class="hex-label-text">HEX</span>
                 <code class="hex-code" id="hex-code">#FFFFFF</code>
               </div>
+              <!-- ガマット警告（印刷色ズレ検知） -->
+              <div class="gamut-warning" id="gamut-warning" aria-live="polite">
+                <div class="gamut-warn-body">
+                  <span class="gamut-icon" aria-hidden="true">⚠️</span>
+                  <span class="gamut-msg">この色は印刷時に現在より少し暗く（くすんで）表示されます。</span>
+                  <button class="gamut-detail-btn" id="gamut-detail-btn" type="button">詳細を確認</button>
+                </div>
+                <div class="gamut-detail" id="gamut-detail">
+                  <div class="gamut-compare">
+                    <div class="gamut-swatch-wrap">
+                      <div class="gamut-swatch" id="gamut-swatch-rgb"></div>
+                      <span>モニター表示</span>
+                    </div>
+                    <div class="gamut-arrow">→</div>
+                    <div class="gamut-swatch-wrap">
+                      <div class="gamut-swatch" id="gamut-swatch-cmyk"></div>
+                      <span>印刷後イメージ</span>
+                    </div>
+                    <div class="gamut-delta" id="gamut-delta-text"></div>
+                  </div>
+                </div>
+                <label class="gamut-toggle-wrap">
+                  <input type="checkbox" id="print-preview-toggle" class="gamut-toggle-input">
+                  <span class="gamut-toggle-track">
+                    <span class="gamut-toggle-thumb"></span>
+                  </span>
+                  <span class="gamut-toggle-label">印刷時の色味を確認する</span>
+                </label>
+              </div>
+
               <!-- 免責テキスト -->
               <p class="disclaimer" style="margin-top:12px;">
                 ※画面上の色・フォントはイメージです。実際の印刷と異なる場合があります。
@@ -328,7 +358,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chroma-js@2.6.0/chroma.min.js"></script>
   <script src="supabase.config.js"></script>
-  <script src="script_nameprint.js?v=20260415a"></script>
+  <script src="script_nameprint.js?v=20260415b"></script>
 </body>
 </html>

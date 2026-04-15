@@ -266,6 +266,21 @@ body {
   flex-shrink  : 0;
 }
 
+/* ガマット外バッジ */
+.gamut-badge {
+  display        : inline-block;
+  margin-left    : 8px;
+  padding        : 2px 6px;
+  font-size      : 11px;
+  font-weight    : 600;
+  color          : #b45309;
+  background     : #fef3c7;
+  border         : 1px solid #f59e0b;
+  border-radius  : 4px;
+  vertical-align : middle;
+  white-space    : nowrap;
+}
+
 code {
   font-family: var(--mono);
   font-size  : 12px;
