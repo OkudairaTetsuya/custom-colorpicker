@@ -140,21 +140,19 @@
       tdPrev.appendChild(img);
     } else { tdPrev.textContent = '—'; }
 
-    /* 作成日時 + ID */
+    /* 作成日時 */
     var tdDate = document.createElement('td');
-    tdDate.className = 'mono small';
-    var dateSpan = document.createElement('span');
-    dateSpan.textContent = formatDate(d.created_at);
-    var idSpan = document.createElement('span');
-    idSpan.className   = 'design-id';
-    idSpan.textContent = d.id || '—';
-    tdDate.appendChild(dateSpan);
-    tdDate.appendChild(document.createElement('br'));
-    tdDate.appendChild(idSpan);
+    tdDate.textContent = formatDate(d.created_at);
+    tdDate.className   = 'mono small';
 
     /* テキスト */
     var tdText = document.createElement('td');
     tdText.textContent = d.text_value || '(なし)';
+
+    /* ID */
+    var tdId = document.createElement('td');
+    tdId.textContent = d.id || '—';
+    tdId.className   = 'design-id mono small';
 
     /* 背景色 */
     var tdColor = document.createElement('td');
@@ -200,7 +198,7 @@
     tdExp.appendChild(sel);
     tdExp.appendChild(btn);
 
-    tr.append(tdPrev, tdDate, tdText, tdColor, tdExp);
+    tr.append(tdPrev, tdDate, tdText, tdId, tdColor, tdExp);
     return tr;
   }
 

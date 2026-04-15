@@ -268,8 +268,6 @@ body {
 
 /* デザインID */
 .design-id {
-  display    : block;
-  margin-top : 3px;
   font-size  : 10px;
   color      : #9ca3af;
   word-break : break-all;
