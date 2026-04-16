@@ -497,3 +497,123 @@ code {
 }
 .toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
 .toast.error   { background: var(--red); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   スタンプ管理
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.stamp-section-header {
+  display        : flex;
+  align-items    : center;
+  gap            : 12px;
+  padding        : 20px 24px 12px;
+}
+.stamp-section-title {
+  font-size  : 15px;
+  font-weight: 600;
+  color      : var(--text);
+}
+.stamp-divider {
+  border     : none;
+  border-top : 1px solid var(--border);
+  margin     : 24px 0 0;
+}
+
+/* タグチップ */
+.tag-chip {
+  display      : inline-block;
+  width        : 22px;
+  height       : 22px;
+  border-radius: 6px;
+  vertical-align: middle;
+  flex-shrink  : 0;
+}
+.tag-chip-sm {
+  width : 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+/* スタンプサムネイル */
+.stamp-thumb {
+  width        : 44px;
+  height       : 44px;
+  object-fit   : contain;
+  border-radius: 6px;
+  background   : #f4f4f8;
+  padding      : 4px;
+  display      : block;
+}
+
+/* SVGアップロード */
+.form-field-full { grid-column: 1 / -1; }
+
+.svg-upload-wrap {
+  display       : flex;
+  align-items   : center;
+  gap           : 14px;
+  flex-wrap     : wrap;
+}
+.svg-file-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+.svg-preview {
+  width          : 72px;
+  height         : 72px;
+  border         : 1px solid var(--border);
+  border-radius  : 8px;
+  background     : #fafafa;
+  display        : flex;
+  align-items    : center;
+  justify-content: center;
+  font-size      : 11px;
+  color          : var(--muted);
+  overflow       : hidden;
+  flex-shrink    : 0;
+}
+.svg-preview svg { width: 56px; height: 56px; }
+
+/* color input */
+.color-field-wrap {
+  display    : flex;
+  align-items: center;
+  gap        : 8px;
+}
+.color-input {
+  width        : 40px;
+  height       : 36px;
+  border       : 1px solid var(--border);
+  border-radius: 7px;
+  padding      : 2px;
+  cursor       : pointer;
+  flex-shrink  : 0;
+}
+.color-hex-input {
+  width      : 90px;
+  padding    : 7px 10px;
+  border     : 1px solid var(--border);
+  border-radius: 7px;
+  font-family: var(--mono);
+  font-size  : 13px;
+}
+
+/* 汎用セレクト */
+.form-select {
+  width        : 100%;
+  height       : 36px;
+  padding      : 0 10px;
+  border       : 1px solid var(--border);
+  border-radius: 7px;
+  font-size    : 13px;
+  background   : var(--card);
+  color        : var(--text);
+}
+
+/* 削除ボタン */
+.btn-danger {
+  color       : var(--red);
+  border-color: rgba(255,59,48,0.4);
+}
+.btn-danger:hover { background: rgba(255,59,48,0.08); }
+

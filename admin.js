@@ -78,6 +78,7 @@
           p.style.display = p.id === 'tab-' + tab ? 'block' : 'none';
         });
         if (tab === 'models') loadModels();
+        if (tab === 'stamps') loadStampTab();
       });
     });
   }
@@ -812,6 +813,305 @@
       });
     });
   }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     スタンプ管理
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var cachedCats   = [];
+  var cachedStamps = [];
+
+  /* ─── カテゴリ ─── */
+  var catsTbody = document.getElementById('cats-tbody');
+  var catsEmpty = document.getElementById('cats-empty');
+
+  function loadStampTab() {
+    loadCats(true);
+  }
+
+  function loadCats(thenStamps) {
+    sb.from('stamp_categories')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .then(function (res) {
+        if (res.error) { showToast('カテゴリ取得失敗: ' + res.error.message, 'error'); return; }
+        cachedCats = res.data || [];
+        catsTbody.innerHTML = '';
+        catsEmpty.style.display = cachedCats.length ? 'none' : 'block';
+        cachedCats.forEach(function (c) { catsTbody.appendChild(buildCatRow(c)); });
+        rebuildCatSelects();
+        if (thenStamps) loadStamps();
+      });
+  }
+
+  function buildCatRow(c) {
+    var tr = document.createElement('tr');
+
+    /* タグ色 */
+    var tdColor = document.createElement('td');
+    var chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.style.background = c.tag_color || '#6366f1';
+    chip.title = c.tag_color || '#6366f1';
+    tdColor.appendChild(chip);
+
+    /* 名前 */
+    var tdName = document.createElement('td');
+    tdName.textContent = c.name;
+
+    /* 並び順 */
+    var tdSort = document.createElement('td');
+    tdSort.textContent = c.sort_order;
+
+    /* 操作 */
+    var tdAct = document.createElement('td');
+    var editBtn = document.createElement('button');
+    editBtn.textContent = '編集';
+    editBtn.className = 'btn-sm';
+    editBtn.addEventListener('click', function () { openEditCatModal(c); });
+
+    var delBtn = document.createElement('button');
+    delBtn.textContent = '削除';
+    delBtn.className = 'btn-sm btn-danger';
+    delBtn.addEventListener('click', function () {
+      if (!confirm(c.name + ' を削除しますか？')) return;
+      sb.from('stamp_categories').delete().eq('id', c.id)
+        .then(function (res) {
+          if (res.error) { showToast('削除失敗: ' + res.error.message, 'error'); return; }
+          showToast(c.name + ' を削除しました');
+          loadCats(true);
+        });
+    });
+
+    var wrap = document.createElement('div');
+    wrap.className = 'export-cell';
+    wrap.appendChild(editBtn);
+    wrap.appendChild(delBtn);
+    tdAct.appendChild(wrap);
+
+    tr.append(tdColor, tdName, tdSort, tdAct);
+    return tr;
+  }
+
+  /* カテゴリ追加フォーム */
+  var addCatForm    = document.getElementById('add-cat-form');
+  var catNameEl     = document.getElementById('cat-name');
+  var catTagColorEl = document.getElementById('cat-tag-color');
+  var catTagHexEl   = document.getElementById('cat-tag-color-hex');
+  var catSortEl     = document.getElementById('cat-sort');
+
+  /* color input ↔ hex text 同期 */
+  catTagColorEl.addEventListener('input', function () { catTagHexEl.value = this.value; });
+  catTagHexEl.addEventListener('input', function () {
+    if (/^#[0-9a-fA-F]{6}$/.test(this.value)) catTagColorEl.value = this.value;
+  });
+
+  document.getElementById('add-cat-btn').addEventListener('click', function () {
+    addCatForm.style.display = 'block';
+    catNameEl.focus();
+  });
+  document.getElementById('cancel-cat-btn').addEventListener('click', function () {
+    addCatForm.style.display = 'none';
+    clearCatForm();
+  });
+
+  function clearCatForm() {
+    catNameEl.value     = '';
+    catTagColorEl.value = '#6366f1';
+    catTagHexEl.value   = '#6366f1';
+    catSortEl.value     = '0';
+  }
+
+  document.getElementById('submit-cat-btn').addEventListener('click', function () {
+    var name  = catNameEl.value.trim();
+    var color = catTagHexEl.value.trim() || '#6366f1';
+    var sort  = parseInt(catSortEl.value, 10) || 0;
+    if (!name) { showToast('カテゴリ名を入力してください', 'error'); return; }
+    sb.from('stamp_categories').insert({ name: name, tag_color: color, sort_order: sort })
+      .then(function (res) {
+        if (res.error) { showToast('追加失敗: ' + res.error.message, 'error'); return; }
+        showToast(name + ' を追加しました');
+        addCatForm.style.display = 'none';
+        clearCatForm();
+        loadCats(true);
+      });
+  });
+
+  /* カテゴリ編集モーダル（インライン簡易） */
+  function openEditCatModal(c) {
+    var name  = prompt('カテゴリ名', c.name);
+    if (name === null) return;
+    var color = prompt('タグカラー (HEX)', c.tag_color || '#6366f1');
+    if (color === null) return;
+    var sort  = parseInt(prompt('並び順', c.sort_order), 10);
+    if (isNaN(sort)) sort = c.sort_order;
+    sb.from('stamp_categories').update({ name: name.trim(), tag_color: color.trim(), sort_order: sort }).eq('id', c.id)
+      .then(function (res) {
+        if (res.error) { showToast('更新失敗: ' + res.error.message, 'error'); return; }
+        showToast('更新しました');
+        loadCats(true);
+      });
+  }
+
+  /* カテゴリセレクト再構築（スタンプ追加フォーム用） */
+  var stampCatSelEl = document.getElementById('stamp-category-sel');
+  function rebuildCatSelects() {
+    stampCatSelEl.innerHTML = '<option value="">— カテゴリなし —</option>';
+    cachedCats.forEach(function (c) {
+      var o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = c.name;
+      stampCatSelEl.appendChild(o);
+    });
+  }
+
+  /* ─── スタンプ ─── */
+  var stampsTbody = document.getElementById('stamps-tbody');
+  var stampsEmpty = document.getElementById('stamps-empty');
+
+  function loadStamps() {
+    sb.from('stamps')
+      .select('*, stamp_categories(name, tag_color)')
+      .order('sort_order', { ascending: true })
+      .then(function (res) {
+        if (res.error) { showToast('スタンプ取得失敗: ' + res.error.message, 'error'); return; }
+        cachedStamps = res.data || [];
+        stampsTbody.innerHTML = '';
+        stampsEmpty.style.display = cachedStamps.length ? 'none' : 'block';
+        cachedStamps.forEach(function (s) { stampsTbody.appendChild(buildStampRow(s)); });
+      });
+  }
+
+  function buildStampRow(s) {
+    var tr = document.createElement('tr');
+
+    /* プレビュー */
+    var tdPrev = document.createElement('td');
+    var img = document.createElement('img');
+    img.src = s.svg_url;
+    img.className = 'stamp-thumb';
+    img.alt = s.name;
+    tdPrev.appendChild(img);
+
+    /* 名前 */
+    var tdName = document.createElement('td');
+    tdName.textContent = s.name;
+
+    /* カテゴリ */
+    var tdCat = document.createElement('td');
+    var cat = s.stamp_categories;
+    if (cat) {
+      var chip = document.createElement('span');
+      chip.className = 'tag-chip tag-chip-sm';
+      chip.style.background = cat.tag_color || '#6366f1';
+      var catLabel = document.createElement('span');
+      catLabel.textContent = cat.name;
+      catLabel.style.marginLeft = '6px';
+      tdCat.appendChild(chip);
+      tdCat.appendChild(catLabel);
+    } else {
+      tdCat.textContent = '—';
+    }
+
+    /* 並び順 */
+    var tdSort = document.createElement('td');
+    tdSort.textContent = s.sort_order;
+
+    /* 操作 */
+    var tdAct = document.createElement('td');
+    var delBtn = document.createElement('button');
+    delBtn.textContent = '削除';
+    delBtn.className = 'btn-sm btn-danger';
+    delBtn.addEventListener('click', function () {
+      if (!confirm(s.name + ' を削除しますか？')) return;
+      /* Storageからも削除 */
+      var path = s.svg_url.split('/stamps/')[1];
+      if (path) sb.storage.from('stamps').remove([decodeURIComponent(path)]);
+      sb.from('stamps').delete().eq('id', s.id)
+        .then(function (res) {
+          if (res.error) { showToast('削除失敗: ' + res.error.message, 'error'); return; }
+          showToast(s.name + ' を削除しました');
+          loadStamps();
+        });
+    });
+
+    var wrap = document.createElement('div');
+    wrap.className = 'export-cell';
+    wrap.appendChild(delBtn);
+    tdAct.appendChild(wrap);
+
+    tr.append(tdPrev, tdName, tdCat, tdSort, tdAct);
+    return tr;
+  }
+
+  /* スタンプ追加フォーム */
+  var addStampForm    = document.getElementById('add-stamp-form');
+  var stampNameEl     = document.getElementById('stamp-name');
+  var stampSortEl     = document.getElementById('stamp-sort');
+  var stampSvgFileEl  = document.getElementById('stamp-svg-file');
+  var stampSvgPreview = document.getElementById('stamp-svg-preview');
+  var pendingSvgText  = null;
+
+  document.getElementById('add-stamp-btn').addEventListener('click', function () {
+    rebuildCatSelects();
+    addStampForm.style.display = 'block';
+    stampNameEl.focus();
+  });
+  document.getElementById('cancel-stamp-btn').addEventListener('click', function () {
+    addStampForm.style.display = 'none';
+    clearStampForm();
+  });
+
+  stampSvgFileEl.addEventListener('change', function () {
+    var file = this.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      pendingSvgText = e.target.result;
+      stampSvgPreview.innerHTML = pendingSvgText;
+      /* プレビュー内SVGのサイズ固定 */
+      var svgEl = stampSvgPreview.querySelector('svg');
+      if (svgEl) { svgEl.style.width = '64px'; svgEl.style.height = '64px'; }
+    };
+    reader.readAsText(file);
+  });
+
+  function clearStampForm() {
+    stampNameEl.value    = '';
+    stampSortEl.value    = '0';
+    stampSvgFileEl.value = '';
+    stampSvgPreview.innerHTML = 'SVGをここに表示';
+    pendingSvgText = null;
+  }
+
+  document.getElementById('submit-stamp-btn').addEventListener('click', function () {
+    var name    = stampNameEl.value.trim();
+    var catId   = stampCatSelEl.value || null;
+    var sort    = parseInt(stampSortEl.value, 10) || 0;
+    var file    = stampSvgFileEl.files[0];
+
+    if (!name)   { showToast('スタンプ名を入力してください', 'error'); return; }
+    if (!file)   { showToast('SVGファイルを選択してください', 'error'); return; }
+    if (!pendingSvgText) { showToast('SVGの読み込みに失敗しました', 'error'); return; }
+
+    var filename = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    var blob = new Blob([pendingSvgText], { type: 'image/svg+xml' });
+
+    sb.storage.from('stamps').upload(filename, blob, { contentType: 'image/svg+xml', upsert: false })
+      .then(function (res) {
+        if (res.error) { showToast('アップロード失敗: ' + res.error.message, 'error'); return; }
+        var urlRes = sb.storage.from('stamps').getPublicUrl(filename);
+        var svgUrl = urlRes.data.publicUrl;
+        return sb.from('stamps').insert({ name: name, category_id: catId, svg_url: svgUrl, sort_order: sort });
+      })
+      .then(function (res) {
+        if (!res) return; /* アップロード失敗時はskip */
+        if (res.error) { showToast('DB保存失敗: ' + res.error.message, 'error'); return; }
+        showToast(name + ' を追加しました');
+        addStampForm.style.display = 'none';
+        clearStampForm();
+        loadStamps();
+      });
+  });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      初期化

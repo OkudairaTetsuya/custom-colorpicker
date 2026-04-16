@@ -30,6 +30,7 @@
       <nav class="admin-tabs">
         <button class="tab-btn active" data-tab="designs">デザイン一覧</button>
         <button class="tab-btn" data-tab="models">機種マスター</button>
+        <button class="tab-btn" data-tab="stamps">スタンプ管理</button>
       </nav>
       <button id="logout-btn" class="logout-btn">ログアウト</button>
     </header>
@@ -118,6 +119,110 @@
       <p class="empty-msg" id="models-empty" style="display:none;">機種が登録されていません</p>
     </div>
 
+    <!-- ── スタンプ管理タブ ── -->
+    <div id="tab-stamps" class="tab-pane" style="display:none;">
+
+      <!-- カテゴリセクション -->
+      <div class="stamp-section-header">
+        <h2 class="stamp-section-title">カテゴリ</h2>
+        <button class="btn-primary" id="add-cat-btn">+ カテゴリを追加</button>
+      </div>
+
+      <div class="add-form" id="add-cat-form" style="display:none;">
+        <h3 class="add-form-title">新しいカテゴリを追加</h3>
+        <div class="add-form-grid">
+          <label class="form-field">
+            <span>カテゴリ名</span>
+            <input type="text" id="cat-name" placeholder="ハート">
+          </label>
+          <label class="form-field">
+            <span>タグカラー</span>
+            <div class="color-field-wrap">
+              <input type="color" id="cat-tag-color" value="#6366f1" class="color-input">
+              <input type="text"  id="cat-tag-color-hex" value="#6366f1" class="color-hex-input" maxlength="7" placeholder="#6366f1">
+            </div>
+          </label>
+          <label class="form-field">
+            <span>並び順</span>
+            <input type="number" id="cat-sort" value="0" min="0">
+          </label>
+        </div>
+        <div class="add-form-actions">
+          <button class="btn-primary" id="submit-cat-btn">追加する</button>
+          <button class="btn-ghost" id="cancel-cat-btn">キャンセル</button>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="admin-table" id="cats-table">
+          <thead>
+            <tr>
+              <th style="width:80px">タグ色</th>
+              <th>カテゴリ名</th>
+              <th style="width:80px">並び順</th>
+              <th style="width:140px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="cats-tbody"></tbody>
+        </table>
+      </div>
+      <p class="empty-msg" id="cats-empty" style="display:none;">カテゴリがありません</p>
+
+      <hr class="stamp-divider">
+
+      <!-- スタンプセクション -->
+      <div class="stamp-section-header">
+        <h2 class="stamp-section-title">スタンプ</h2>
+        <button class="btn-primary" id="add-stamp-btn">+ スタンプを追加</button>
+      </div>
+
+      <div class="add-form" id="add-stamp-form" style="display:none;">
+        <h3 class="add-form-title">新しいスタンプを追加</h3>
+        <div class="add-form-grid">
+          <label class="form-field">
+            <span>スタンプ名</span>
+            <input type="text" id="stamp-name" placeholder="ハート">
+          </label>
+          <label class="form-field">
+            <span>カテゴリ</span>
+            <select id="stamp-category-sel" class="form-select"></select>
+          </label>
+          <label class="form-field">
+            <span>並び順</span>
+            <input type="number" id="stamp-sort" value="0" min="0">
+          </label>
+          <label class="form-field form-field-full">
+            <span>SVGファイル</span>
+            <div class="svg-upload-wrap">
+              <input type="file" id="stamp-svg-file" accept=".svg,image/svg+xml" class="svg-file-input">
+              <div class="svg-preview" id="stamp-svg-preview">SVGをここに表示</div>
+            </div>
+          </label>
+        </div>
+        <div class="add-form-actions">
+          <button class="btn-primary" id="submit-stamp-btn">追加する</button>
+          <button class="btn-ghost" id="cancel-stamp-btn">キャンセル</button>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="admin-table" id="stamps-table">
+          <thead>
+            <tr>
+              <th style="width:64px">プレビュー</th>
+              <th>スタンプ名</th>
+              <th style="width:120px">カテゴリ</th>
+              <th style="width:70px">並び順</th>
+              <th style="width:100px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="stamps-tbody"></tbody>
+        </table>
+      </div>
+      <p class="empty-msg" id="stamps-empty" style="display:none;">スタンプがありません</p>
+
+    </div><!-- /#tab-stamps -->
+
   </div><!-- /.admin-screen -->
 
   <!-- トースト通知 -->
@@ -127,6 +232,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
   <script src="supabase.config.js"></script>
-  <script src="admin.js?v=20260415c"></script>
+  <script src="admin.js?v=20260416a"></script>
 </body>
 </html>

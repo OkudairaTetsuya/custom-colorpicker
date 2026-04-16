@@ -20,6 +20,16 @@
     isPrint     : false,   /* 印刷プレビュー中か */
   };
 
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     スタンプ状態
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var stampState = {
+    color       : '#000000',
+    cats        : [],
+    stamps      : [],
+    currentCatId: null,
+  };
+
   /* デバウンス：連続入力中は判定を遅延させてパフォーマンスを確保 */
   function debounce(fn, ms) {
     var t;
@@ -730,29 +740,40 @@
     });
   }
 
+  function getUserObjects() {
+    return canvas.getObjects().filter(function (o) {
+      return o.type === 'i-text' || o.type === 'text' || o.isStamp;
+    });
+  }
+
   function refreshLayerList() {
     layerListEl.innerHTML = '';
-    var texts = getTextObjects();
-    if (texts.length === 0) {
+    var objs = getUserObjects();
+    if (objs.length === 0) {
       var emp = document.createElement('p');
       emp.className = 'layer-empty';
-      emp.textContent = 'テキストがありません';
+      emp.textContent = 'レイヤーがありません';
       layerListEl.appendChild(emp);
       return;
     }
 
     /* 上レイヤー（高インデックス）を先頭に表示 */
-    var reversed = texts.slice().reverse();
+    var reversed = objs.slice().reverse();
     var total = reversed.length;
 
     reversed.forEach(function (obj, listIdx) {
       var item = document.createElement('div');
       item.className = 'layer-item' + (obj === activeText ? ' active' : '');
 
-      /* テキストラベル */
+      /* ラベル */
       var lbl = document.createElement('span');
-      lbl.className = 'layer-label' + (obj.text ? '' : ' layer-label-empty');
-      lbl.textContent = obj.text || '（空）';
+      if (obj.isStamp) {
+        lbl.className   = 'layer-label layer-label-stamp';
+        lbl.textContent = '🖼 ' + (obj.stampName || 'スタンプ');
+      } else {
+        lbl.className   = 'layer-label' + (obj.text ? '' : ' layer-label-empty');
+        lbl.textContent = obj.text || '（空）';
+      }
 
       /* 上へボタン（リスト上 = z-order高く） */
       var upBtn = document.createElement('button');
@@ -792,6 +813,7 @@
         e.stopPropagation();
         canvas.remove(obj);
         if (activeText === obj) { activeText = null; textInput.value = ''; }
+        if (obj.isStamp) { /* スタンプ削除後は色行を更新 */ }
         canvas.renderAll();
         refreshLayerList();
       });
@@ -813,9 +835,9 @@
     });
   }
 
-  /* テキスト選択/解除でパネルも更新 */
-  canvas.on('selection:created',  function () { refreshLayerList(); });
-  canvas.on('selection:updated',  function () { refreshLayerList(); });
+  /* テキスト選択/解除でパネルも更新、スタンプ色ピッカーも同期 */
+  canvas.on('selection:created',  function (e) { refreshLayerList(); syncStampColorPicker(e.selected && e.selected[0]); });
+  canvas.on('selection:updated',  function (e) { refreshLayerList(); syncStampColorPicker(e.selected && e.selected[0]); });
   canvas.on('selection:cleared',  function () { refreshLayerList(); });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -912,7 +934,7 @@
 
     var id = generateId();
 
-    var canvasData = canvas.toJSON(['globalCompositeOperation', 'selectable', 'evented']);
+    var canvasData = canvas.toJSON(['globalCompositeOperation', 'selectable', 'evented', 'isStamp', 'stampId', 'stampName']);
     canvasData._canvasWidth  = CANVAS_W;
     canvasData._canvasHeight = CANVAS_H;
     var canvasJson = JSON.stringify(canvasData);
@@ -1095,6 +1117,8 @@
             canvas.getObjects().forEach(function (obj) {
               if (obj.type === 'i-text' || obj.type === 'text') {
                 if (!activeText) activeText = obj;
+              } else if (obj.isStamp) {
+                /* スタンプグループ: 追加のセットアップ不要（JSON復元で isStamp/stampId が復元される） */
               } else if (obj.type === 'image') {
                 if (obj.globalCompositeOperation === 'multiply') {
                   textureObj = obj;
@@ -1157,6 +1181,164 @@
     var id = new URLSearchParams(location.search).get('id');
     if (id) loadDesignById(id);
   }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     スタンプ機能
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var stampCatTabsEl  = document.getElementById('stamp-cat-tabs');
+  var stampGridEl     = document.getElementById('stamp-grid');
+  var stampLoadingEl  = document.getElementById('stamp-loading');
+  var stampColorInput = document.getElementById('stamp-color-input');
+  var stampColorChip  = document.getElementById('stamp-color-chip');
+  var stampColorHex   = document.getElementById('stamp-color-hex');
+  var stampColorRow   = document.getElementById('stamp-color-row');
+
+  /* スタンプ＆カテゴリ取得 */
+  function loadStamps() {
+    if (!supabaseClient) return;
+    Promise.all([
+      supabaseClient.from('stamp_categories').select('*').order('sort_order'),
+      supabaseClient.from('stamps').select('*').order('sort_order'),
+    ]).then(function (results) {
+      var catRes    = results[0];
+      var stampRes  = results[1];
+      if (catRes.error || stampRes.error) return;
+      stampState.cats   = catRes.data  || [];
+      stampState.stamps = stampRes.data || [];
+      stampState.currentCatId = stampState.cats.length ? stampState.cats[0].id : null;
+      renderStampCatTabs();
+      renderStampGrid();
+      if (stampLoadingEl) stampLoadingEl.style.display = 'none';
+      if (stampState.stamps.length) stampColorRow.style.display = 'flex';
+    });
+  }
+
+  /* カテゴリタブ描画 */
+  function renderStampCatTabs() {
+    stampCatTabsEl.innerHTML = '';
+    if (!stampState.cats.length) return;
+
+    stampState.cats.forEach(function (cat) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'stamp-cat-btn' + (cat.id === stampState.currentCatId ? ' active' : '');
+      btn.dataset.catId = cat.id;
+      btn.textContent   = cat.name;
+      btn.style.setProperty('--cat-color', cat.tag_color || '#6366f1');
+      btn.addEventListener('click', function () {
+        stampState.currentCatId = cat.id;
+        renderStampCatTabs();
+        renderStampGrid();
+      });
+      stampCatTabsEl.appendChild(btn);
+    });
+  }
+
+  /* スタンプグリッド描画 */
+  function renderStampGrid() {
+    stampGridEl.innerHTML = '';
+    var filtered = stampState.currentCatId
+      ? stampState.stamps.filter(function (s) { return s.category_id === stampState.currentCatId; })
+      : stampState.stamps;
+
+    if (!filtered.length) {
+      var emp = document.createElement('p');
+      emp.className   = 'stamp-empty';
+      emp.textContent = 'スタンプがありません';
+      stampGridEl.appendChild(emp);
+      return;
+    }
+
+    filtered.forEach(function (stamp) {
+      var btn = document.createElement('button');
+      btn.type      = 'button';
+      btn.className = 'stamp-item';
+      btn.title     = stamp.name;
+
+      var img = document.createElement('img');
+      img.src   = stamp.svg_url;
+      img.alt   = stamp.name;
+      img.style.width  = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+      btn.appendChild(img);
+
+      btn.addEventListener('click', function () {
+        addStampToCanvas(stamp);
+      });
+      stampGridEl.appendChild(btn);
+    });
+  }
+
+  /* キャンバスにスタンプを追加 */
+  function addStampToCanvas(stamp) {
+    if (!frameObj && !canvas.getObjects().length) return; /* 機種未選択 */
+    fabric.loadSVGFromURL(stamp.svg_url, function (objects, options) {
+      if (!objects || !objects.length) { showError('SVGの読み込みに失敗しました'); return; }
+
+      /* 全パスに色を適用 */
+      objects.forEach(function (obj) {
+        if (obj.fill && obj.fill !== 'none') obj.set('fill', stampState.color);
+        if (obj.stroke && obj.stroke !== 'none') obj.set('stroke', stampState.color);
+      });
+
+      var group = fabric.util.groupSVGElements(objects, options);
+      var size  = Math.round(CANVAS_W * 0.3); /* キャンバス幅の30% */
+      var scale = size / Math.max(group.width, group.height);
+      group.set({
+        left       : CANVAS_W / 2,
+        top        : CANVAS_H / 2,
+        originX    : 'center',
+        originY    : 'center',
+        scaleX     : scale,
+        scaleY     : scale,
+        selectable : true,
+        evented    : true,
+        isStamp    : true,
+        stampId    : stamp.id,
+        stampName  : stamp.name,
+      });
+
+      var idx = frameObj ? canvas.getObjects().indexOf(frameObj) : canvas.getObjects().length;
+      canvas.insertAt(group, Math.max(0, idx));
+      if (frameObj) canvas.bringToFront(frameObj);
+      canvas.setActiveObject(group);
+      canvas.renderAll();
+      refreshLayerList();
+    });
+  }
+
+  /* 選択オブジェクトがスタンプならカラーピッカーを同期 */
+  function syncStampColorPicker(obj) {
+    if (!obj || !obj.isStamp) return;
+    /* グループの最初の子から現在色を取得 */
+    var firstObj = obj._objects && obj._objects[0];
+    var col = (firstObj && firstObj.fill && firstObj.fill !== 'none') ? firstObj.fill : stampState.color;
+    setStampColor(col);
+  }
+
+  /* スタンプ色を変更してキャンバス上の選択スタンプにも反映 */
+  function setStampColor(hex) {
+    stampState.color    = hex;
+    stampColorInput.value = hex;
+    stampColorChip.style.background = hex;
+    stampColorHex.textContent = hex.toUpperCase();
+
+    var active = canvas.getActiveObject();
+    if (active && active.isStamp) {
+      active._objects && active._objects.forEach(function (obj) {
+        if (obj.fill   && obj.fill   !== 'none') obj.set('fill',   hex);
+        if (obj.stroke && obj.stroke !== 'none') obj.set('stroke', hex);
+      });
+      active.dirty = true;
+      canvas.renderAll();
+    }
+  }
+
+  /* カラーピッカー操作 */
+  stampColorInput.addEventListener('input', function () {
+    setStampColor(this.value);
+  });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      フッター: ID入力で呼び出し
@@ -1312,6 +1494,8 @@
 
   /* 機種リスト読み込み */
   loadModelList();
+  /* スタンプ読み込み */
+  loadStamps();
   /* レイヤーパネル初期表示 */
   refreshLayerList();
   /* URLにidが含まれている場合はデザイン復元 */

@@ -1266,3 +1266,109 @@
   font-weight: 600;
   color: var(--sub);
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   スタンプピッカー
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.stamp-picker {
+  margin-top: 16px;
+  border-top : 1px solid var(--border);
+  padding-top: 14px;
+}
+
+/* カテゴリタブ */
+.stamp-cat-tabs {
+  display   : flex;
+  flex-wrap : wrap;
+  gap       : 6px;
+  margin-bottom: 12px;
+}
+.stamp-cat-btn {
+  padding      : 5px 13px;
+  border       : 1.5px solid var(--cat-color, #6366f1);
+  border-radius: 20px;
+  background   : transparent;
+  color        : var(--cat-color, #6366f1);
+  font-size    : 12px;
+  font-weight  : 600;
+  cursor       : pointer;
+  transition   : background 0.15s, color 0.15s;
+  line-height  : 1.4;
+}
+.stamp-cat-btn.active,
+.stamp-cat-btn:hover {
+  background: var(--cat-color, #6366f1);
+  color     : #fff;
+}
+
+/* スタンプグリッド */
+.stamp-grid {
+  display              : grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap                  : 8px;
+  margin-bottom        : 12px;
+}
+.stamp-item {
+  aspect-ratio : 1;
+  border        : 1.5px solid var(--border);
+  border-radius : 10px;
+  background    : #fafafa;
+  cursor        : pointer;
+  padding       : 8px;
+  display       : flex;
+  align-items   : center;
+  justify-content: center;
+  transition    : border-color 0.15s, background 0.15s;
+}
+.stamp-item:hover {
+  border-color: var(--blue);
+  background  : #f0f5ff;
+}
+.stamp-item img {
+  width     : 100%;
+  height    : 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.stamp-empty,
+.stamp-loading {
+  grid-column: 1 / -1;
+  font-size  : 12px;
+  color      : var(--muted);
+  padding    : 8px 0;
+}
+
+/* スタンプ色行 */
+.stamp-color-row {
+  display    : flex;
+  align-items: center;
+  gap        : 10px;
+  margin-top : 4px;
+}
+.stamp-color-chip-wrap {
+  cursor   : pointer;
+  display  : flex;
+  align-items: center;
+}
+.stamp-color-input {
+  position: absolute;
+  opacity : 0;
+  width   : 0;
+  height  : 0;
+  pointer-events: none;
+}
+.stamp-color-chip {
+  display      : inline-block;
+  width        : 26px;
+  height       : 26px;
+  border-radius: 8px;
+  border       : 1.5px solid rgba(0,0,0,0.12);
+  cursor       : pointer;
+  flex-shrink  : 0;
+}
+
+/* レイヤーラベル: スタンプ */
+.layer-label-stamp {
+  font-size: 12px;
+  color    : var(--blue);
+}
