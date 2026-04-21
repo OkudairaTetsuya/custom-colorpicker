@@ -333,6 +333,9 @@
       canvas.renderAll();
 
       if (canvasLoader) canvasLoader.classList.remove('active');
+      /* 機種読み込み完了時に履歴をリセットして初期スナップショットを保存 */
+      undoStack.length = 0;
+      snapshotCanvas();
     }, { crossOrigin: 'anonymous' });
   }
 
@@ -838,6 +841,69 @@
   canvas.on('selection:created',  function () { refreshLayerList(); });
   canvas.on('selection:updated',  function () { refreshLayerList(); });
   canvas.on('selection:cleared',  function () { refreshLayerList(); });
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     履歴（Undo）管理
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var undoStack   = [];       /* JSONスナップショット配列 */
+  var historyLock = false;    /* 復元中に再保存しないフラグ */
+  var MAX_HISTORY = 30;
+  var undoBtn     = document.getElementById('undo-btn');
+
+  function snapshotCanvas() {
+    if (historyLock) return;
+    var json = JSON.stringify(canvas.toJSON(
+      ['globalCompositeOperation', 'selectable', 'evented', 'isStamp', 'stampId', 'stampName']
+    ));
+    /* 直前と同じ状態なら積まない */
+    if (undoStack.length && undoStack[undoStack.length - 1] === json) return;
+    undoStack.push(json);
+    if (undoStack.length > MAX_HISTORY) undoStack.shift();
+    undoBtn.disabled = undoStack.length <= 1;
+  }
+
+  /* デバウンス版スナップショット（テキスト入力中の連打防止） */
+  var snapshotDebounced = debounce(snapshotCanvas, 400);
+
+  /* オブジェクト追加・削除・移動・変形時に保存 */
+  canvas.on('object:added',    snapshotCanvas);
+  canvas.on('object:removed',  snapshotCanvas);
+  canvas.on('object:modified', snapshotCanvas);
+  /* テキスト編集中はデバウンスで保存 */
+  canvas.on('text:changed',    snapshotDebounced);
+
+  function undoCanvas() {
+    if (undoStack.length <= 1) return;
+    undoStack.pop(); /* 現在の状態を捨てる */
+    var prev = undoStack[undoStack.length - 1];
+    historyLock = true;
+    canvas.loadFromJSON(prev, function () {
+      /* フレーム・テキスト・スタンプ参照を再同期 */
+      activeText = null; textureObj = null; frameObj = null;
+      canvas.getObjects().forEach(function (obj) {
+        if (obj.isFrame)   { frameObj   = obj; }
+        if (obj.isTexture) { textureObj = obj; }
+      });
+      if (frameObj) canvas.bringToFront(frameObj);
+      canvas.renderAll();
+      refreshLayerList();
+      historyLock = false;
+      undoBtn.disabled = undoStack.length <= 1;
+    });
+  }
+
+  undoBtn.addEventListener('click', undoCanvas);
+
+  /* キーボード Ctrl+Z / Cmd+Z */
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      /* テキスト編集中は標準のundoに任せる */
+      var active = canvas.getActiveObject();
+      if (active && active.isEditing) return;
+      e.preventDefault();
+      undoCanvas();
+    }
+  });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      テキスト追加

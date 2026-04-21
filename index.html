@@ -34,7 +34,7 @@
       <!-- 左カラム: スマホ プレビュー -->
       <div class="pc-left">
         <div class="card" id="card-preview">
-          <div class="preview-inner">
+          <div class="preview-inner" style="position:relative;">
             <!-- 機種セレクター（ブランド→機種の2ステップ） -->
             <div class="model-selector-wrap" id="model-selector-wrap">
               <!-- ステップ1: ブランド選択 -->
@@ -77,6 +77,8 @@
                 <div class="canvas-loader-bar"></div>
               </div>
             </div>
+            <!-- 元に戻すボタン -->
+            <button class="undo-btn" id="undo-btn" title="元に戻す" disabled>↩</button>
           </div>
         </div>
       </div>
