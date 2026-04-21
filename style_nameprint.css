@@ -1428,3 +1428,33 @@
   font-size: 12px;
   color    : var(--blue);
 }
+
+/* 免責事項フッター */
+.disclaimer-footer {
+  background : #f4f4f8;
+  border-top : 1px solid var(--border, rgba(0,0,0,0.08));
+  padding    : 20px 16px 32px;
+}
+.disclaimer-list {
+  max-width  : 440px;
+  margin     : 0 auto;
+  padding    : 0;
+  list-style : none;
+  display    : flex;
+  flex-direction: column;
+  gap        : 8px;
+}
+.disclaimer-list li {
+  font-size  : 11px;
+  line-height: 1.65;
+  color      : #6c6c70;
+  padding-left: 1em;
+  text-indent : -1em;
+}
+.disclaimer-list li::before {
+  content    : '■ ';
+  color      : #aeaeb2;
+}
+@media (min-width: 780px) {
+  .disclaimer-list { max-width: 960px; }
+}
