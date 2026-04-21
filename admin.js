@@ -202,7 +202,28 @@
     expWrap.appendChild(btn);
     tdExp.appendChild(expWrap);
 
-    tr.append(tdPrev, tdDate, tdText, tdId, tdColor, tdExp);
+    /* 削除ボタン */
+    var tdDel = document.createElement('td');
+    var delBtn = document.createElement('button');
+    delBtn.textContent = '削除';
+    delBtn.className   = 'btn-sm btn-danger';
+    delBtn.addEventListener('click', function () {
+      if (!confirm('ID: ' + d.id + '\nこのデザインを削除しますか？')) return;
+      /* Storage のプレビュー画像を削除 */
+      if (d.preview_url) {
+        var previewPath = d.preview_url.split('/previews/')[1];
+        if (previewPath) sb.storage.from('previews').remove([decodeURIComponent(previewPath)]);
+      }
+      /* DB レコードを削除 */
+      sb.from('designs').delete().eq('id', d.id).then(function (res) {
+        if (res.error) { showToast('削除失敗: ' + res.error.message, 'error'); return; }
+        showToast('削除しました: ' + d.id);
+        tr.remove();
+      });
+    });
+    tdDel.appendChild(delBtn);
+
+    tr.append(tdPrev, tdDate, tdText, tdId, tdColor, tdExp, tdDel);
     return tr;
   }
 
