@@ -9,6 +9,9 @@
   var CANVAS_W = 300;
   var CANVAS_H = 600;
 
+  /* SVG出力時の上部オフセット（フレーム画像の非印刷エリア分） */
+  var EXPORT_TOP_OFFSET_MM = 25;
+
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      Supabase クライアント
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -661,27 +664,27 @@
      - viewBox を 0 0 W H に正規化（上部余白の除去）
      - clipPath でキャンバス外へのはみ出しをマスク
   */
-  function processSvg(svgStr, wMm, hMm) {
+  function processSvg(svgStr, wMm, hMm, topOffsetMm) {
     var parser = new DOMParser();
     var doc    = parser.parseFromString(svgStr, 'image/svg+xml');
     var svgEl  = doc.querySelector('svg');
     if (!svgEl) return svgStr;
 
-    /* viewBox からピクセル寸法を取得 */
-    var vbParts = (svgEl.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
-    var pxW = (vbParts.length >= 4 && vbParts[2] > 0) ? vbParts[2]
-            : parseFloat(svgEl.getAttribute('width'))  || 300;
-    var pxH = (vbParts.length >= 4 && vbParts[3] > 0) ? vbParts[3]
-            : parseFloat(svgEl.getAttribute('height')) || 600;
+    /* 設計キャンバスは常に CANVAS_W × CANVAS_H で固定 */
+    var pxW = CANVAS_W;
+    var pxH = CANVAS_H;
 
-    /* mm 寸法を設定・viewBox を 0 起点に正規化
-       preserveAspectRatio="none" : viewBox と mm 寸法のアスペクト比が異なる場合に
-       Illustrator が xMidYMid meet でコンテンツを中央揃えしてズレるのを防ぐ */
+    /* 上部オフセット: フレーム画像の非印刷エリア分を viewBox y 起点でカット
+       offsetPx = topOffsetMm / hMm * pxH
+       → viewBox "0 offsetPx pxW (pxH - offsetPx)" にすることで
+         canvas の offsetPx 以降が mm 寸法にマッピングされ位置が一致する */
+    var offsetPx = topOffsetMm ? Math.round((topOffsetMm / hMm) * pxH) : 0;
+
     svgEl.setAttribute('width',               wMm + 'mm');
     svgEl.setAttribute('height',              hMm + 'mm');
-    svgEl.setAttribute('viewBox',             '0 0 ' + pxW + ' ' + pxH);
+    svgEl.setAttribute('viewBox',             '0 ' + offsetPx + ' ' + pxW + ' ' + (pxH - offsetPx));
     svgEl.setAttribute('preserveAspectRatio', 'none');
-    svgEl.removeAttribute('overflow'); /* overflow="hidden" は clip-path wrapper で代替 */
+    svgEl.removeAttribute('overflow');
 
     return new XMLSerializer().serializeToString(doc);
   }
@@ -697,10 +700,12 @@
     var svgEl  = doc.querySelector('svg');
     if (!svgEl) return svgStr;
 
-    /* processSvg が正規化した viewBox から寸法を読み取る */
-    var vb  = (svgEl.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
-    var pxW = (vb.length >= 4 && vb[2] > 0) ? vb[2] : CANVAS_W;
-    var pxH = (vb.length >= 4 && vb[3] > 0) ? vb[3] : CANVAS_H;
+    /* processSvg が正規化した viewBox から寸法を読み取る
+       viewBox = "0 offsetPx pxW (pxH - offsetPx)" 形式 */
+    var vb     = (svgEl.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+    var vbY    = (vb.length >= 4) ? vb[1] : 0;
+    var pxW    = (vb.length >= 4 && vb[2] > 0) ? vb[2] : CANVAS_W;
+    var pxH    = (vb.length >= 4 && vb[3] > 0) ? vb[3] : CANVAS_H;
 
     /* defs を確保 */
     var defs = doc.querySelector('defs');
@@ -716,9 +721,9 @@
     var cp = doc.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
     cp.setAttribute('id', 'canvas-clip');
     var cr = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    cr.setAttribute('x', '0'); cr.setAttribute('y', '0');
+    cr.setAttribute('x', '0'); cr.setAttribute('y', String(vbY));
     cr.setAttribute('width',  String(pxW));
-    cr.setAttribute('height', String(pxH));
+    cr.setAttribute('height', String(pxH));  /* pxH = viewBox の height 値 = offsetPx 除去済み */
     cp.appendChild(cr);
     defs.appendChild(cp);
 
@@ -770,12 +775,9 @@
       if (hasEmoji) {
         if (!confirm('このデザインには絵文字が含まれています。\n絵文字は opentype.js でパス化できないため SVG に正しく出力されません。\n\nそのまま出力しますか？')) return;
       }
-      /* キャンバス幅は常にmm比率から計算
-         → viewBoxとmm寸法のアスペクト比を一致させIllustratorのletterboxingを防ぐ */
-      if (model.widthMm && model.heightMm) {
-        savedCanvasH = CANVAS_H;
-        savedCanvasW = Math.round(CANVAS_H * model.widthMm / model.heightMm);
-      }
+      /* 出力キャンバスは常に設計時と同じ CANVAS_W×CANVAS_H を使用
+         → オブジェクト座標が 300px 基準で保存されているため、幅を変えると水平位置がズレる
+         → mm 変換は processSvg の viewBox × preserveAspectRatio="none" で対応 */
     } catch (e) { /* JSON解析失敗は無視して続行 */ }
 
     showToast('SVG を生成中…');
@@ -800,7 +802,7 @@
       /* SVG 生成 → mm正規化 → テキストパス化 → clipPath適用 → ダウンロード
          ※ clipPath は textToPath の後に適用する（パス化と干渉しないよう分離） */
       var rawSvg = fc.toSVG();
-      var mmSvg  = processSvg(rawSvg, model.widthMm, model.heightMm);
+      var mmSvg  = processSvg(rawSvg, model.widthMm, model.heightMm, EXPORT_TOP_OFFSET_MM);
 
       textToPath(mmSvg).then(function (pathSvg) {
         /* アウトライン化できなかった <text> が残っていれば通知 */
