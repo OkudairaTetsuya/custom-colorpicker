@@ -687,22 +687,36 @@
     svgEl.setAttribute('preserveAspectRatio', 'none');
     svgEl.removeAttribute('overflow');
 
-    /* defs・desc 以外の直接子を translate グループでまとめてオフセット適用 */
+    /* defs・desc・背景 rect 以外の直接子を translate グループでまとめてオフセット適用
+       背景 rect は translate しないでそのまま残し、明示的なピクセル値に修正する
+       （100% のままだと translate 後に下端に空白が生じるため） */
     if (offsetPx > 0) {
       var toMove = [];
       Array.from(svgEl.childNodes).forEach(function (node) {
         if (node.nodeType !== 1) return;
         var tag = node.tagName.toLowerCase();
         if (tag === 'defs' || tag === 'desc') return;
+        /* 背景 rect: translate しない。100% → 実ピクセルに書き換えてそのまま残す */
+        if (tag === 'rect' &&
+            (node.getAttribute('width') === '100%' ||
+             parseFloat(node.getAttribute('width')) >= pxW * 0.9)) {
+          node.setAttribute('x', '0');
+          node.setAttribute('y', '0');
+          node.setAttribute('width',  String(pxW));
+          node.setAttribute('height', String(pxH));
+          return; /* toMove に追加しない */
+        }
         toMove.push(node);
       });
-      var g = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g.setAttribute('transform', 'translate(0,' + (-offsetPx) + ')');
-      toMove.forEach(function (child) {
-        svgEl.removeChild(child);
-        g.appendChild(child);
-      });
-      svgEl.appendChild(g);
+      if (toMove.length) {
+        var g = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('transform', 'translate(0,' + (-offsetPx) + ')');
+        toMove.forEach(function (child) {
+          svgEl.removeChild(child);
+          g.appendChild(child);
+        });
+        svgEl.appendChild(g);
+      }
     }
 
     return new XMLSerializer().serializeToString(doc);
