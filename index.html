@@ -98,19 +98,19 @@
           </button>
           <button class="step-dot" data-step="2">
             <span class="step-dot-num">3</span>
-            <span class="step-dot-label">スタンプ</span>
+            <span class="step-dot-label">フォント</span>
           </button>
           <button class="step-dot" data-step="3">
             <span class="step-dot-num">4</span>
-            <span class="step-dot-label">フォント</span>
+            <span class="step-dot-label">文字色</span>
           </button>
           <button class="step-dot" data-step="4">
             <span class="step-dot-num">5</span>
-            <span class="step-dot-label">文字色</span>
+            <span class="step-dot-label">配置</span>
           </button>
           <button class="step-dot" data-step="5">
             <span class="step-dot-num">6</span>
-            <span class="step-dot-label">配置</span>
+            <span class="step-dot-label">スタンプ</span>
           </button>
         </div>
 
@@ -202,43 +202,14 @@
               <div class="np-row text-layer-btns">
                 <button type="button" id="add-text-btn" class="align-btn">＋ テキストを追加</button>
               </div>
-              <!-- レイヤーリスト -->
-              <div class="layer-panel" id="layer-panel">
-                <p class="layer-panel-title">レイヤー</p>
-                <div class="layer-list" id="layer-list">
-                  <!-- JS で動的生成 -->
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
-        <!-- ステップ 3: スタンプ -->
-        <div class="card step-card" data-step-idx="2" id="step-card-stamp">
-          <button class="ac-header pc-ac-header" data-target="step-body-stamp">
-            <span class="ac-title"><span class="ac-num">3</span>🖼 スタンプ</span>
-            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="step-body" id="step-body-stamp">
-            <div class="step-inner">
-              <div class="stamp-picker" id="stamp-picker">
-                <!-- カテゴリタブ -->
-                <div class="stamp-cat-tabs" id="stamp-cat-tabs">
-                  <p class="stamp-loading" id="stamp-loading">読み込み中…</p>
-                </div>
-                <!-- スタンプグリッド -->
-                <div class="stamp-scroll-wrap">
-                  <div class="stamp-grid" id="stamp-grid"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ステップ 4: フォント -->
-        <div class="card step-card" data-step-idx="3" id="step-card-2">
+        <!-- ステップ 3: フォント -->
+        <div class="card step-card" data-step-idx="2" id="step-card-2">
           <button class="ac-header pc-ac-header" data-target="step-body-2">
-            <span class="ac-title"><span class="ac-num">4</span>フォント・サイズ</span>
+            <span class="ac-title"><span class="ac-num">3</span>フォント・サイズ</span>
             <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="step-body" id="step-body-2">
@@ -273,10 +244,10 @@
           </div>
         </div>
 
-        <!-- ステップ 5: 文字色 -->
-        <div class="card step-card" data-step-idx="4" id="step-card-3">
+        <!-- ステップ 4: 文字色 -->
+        <div class="card step-card" data-step-idx="3" id="step-card-3">
           <button class="ac-header pc-ac-header" data-target="step-body-3">
-            <span class="ac-title"><span class="ac-num">5</span>文字色</span>
+            <span class="ac-title"><span class="ac-num">4</span>文字色</span>
             <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="step-body" id="step-body-3">
@@ -300,10 +271,10 @@
           </div>
         </div>
 
-        <!-- ステップ 6: 配置 -->
-        <div class="card step-card" data-step-idx="5" id="step-card-4">
+        <!-- ステップ 5: 配置 -->
+        <div class="card step-card" data-step-idx="4" id="step-card-4">
           <button class="ac-header pc-ac-header" data-target="step-body-4">
-            <span class="ac-title"><span class="ac-num">6</span>配置・回転</span>
+            <span class="ac-title"><span class="ac-num">5</span>配置・回転</span>
             <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="step-body" id="step-body-4">
@@ -323,6 +294,38 @@
                   <button class="align-btn" id="rotate-cw">↻ 時計回り</button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ステップ 6: スタンプ -->
+        <div class="card step-card" data-step-idx="5" id="step-card-stamp">
+          <button class="ac-header pc-ac-header" data-target="step-body-stamp">
+            <span class="ac-title"><span class="ac-num">6</span>🖼 スタンプ</span>
+            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="step-body" id="step-body-stamp">
+            <div class="step-inner">
+              <div class="stamp-picker" id="stamp-picker">
+                <!-- カテゴリタブ -->
+                <div class="stamp-cat-tabs" id="stamp-cat-tabs">
+                  <p class="stamp-loading" id="stamp-loading">読み込み中…</p>
+                </div>
+                <!-- スタンプグリッド -->
+                <div class="stamp-scroll-wrap">
+                  <div class="stamp-grid" id="stamp-grid"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- レイヤーパネル（常駐） -->
+        <div class="card layer-panel-card" id="layer-panel-card">
+          <div class="layer-panel-card-inner">
+            <p class="layer-panel-title">レイヤー</p>
+            <div class="layer-list" id="layer-list">
+              <!-- JS で動的生成 -->
             </div>
           </div>
         </div>

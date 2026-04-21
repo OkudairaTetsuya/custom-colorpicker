@@ -1077,6 +1077,17 @@
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    テキストレイヤーパネル
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* 常駐レイヤーパネルカード */
+.layer-panel-card {
+  margin-top: 8px;
+}
+.layer-panel-card-inner {
+  padding: 12px 16px 14px;
+}
+.layer-panel-card .layer-panel-title {
+  margin-bottom: 8px;
+}
+
 .layer-panel {
   margin-top: 12px;
 }
