@@ -1016,6 +1016,12 @@
     var tdSort = document.createElement('td');
     tdSort.textContent = s.sort_order;
 
+    /* 色変更 */
+    var tdColor = document.createElement('td');
+    tdColor.textContent = s.allow_color_change ? '✓' : '—';
+    tdColor.style.textAlign = 'center';
+    tdColor.style.color = s.allow_color_change ? '#34c759' : '#8e8e93';
+
     /* 操作 */
     var tdAct = document.createElement('td');
     var delBtn = document.createElement('button');
@@ -1039,17 +1045,18 @@
     wrap.appendChild(delBtn);
     tdAct.appendChild(wrap);
 
-    tr.append(tdPrev, tdName, tdCat, tdSort, tdAct);
+    tr.append(tdPrev, tdName, tdCat, tdSort, tdColor, tdAct);
     return tr;
   }
 
   /* スタンプ追加フォーム */
-  var addStampForm    = document.getElementById('add-stamp-form');
-  var stampNameEl     = document.getElementById('stamp-name');
-  var stampSortEl     = document.getElementById('stamp-sort');
-  var stampSvgFileEl  = document.getElementById('stamp-svg-file');
-  var stampSvgPreview = document.getElementById('stamp-svg-preview');
-  var pendingSvgText  = null;
+  var addStampForm      = document.getElementById('add-stamp-form');
+  var stampNameEl       = document.getElementById('stamp-name');
+  var stampSortEl       = document.getElementById('stamp-sort');
+  var stampSvgFileEl    = document.getElementById('stamp-svg-file');
+  var stampSvgPreview   = document.getElementById('stamp-svg-preview');
+  var stampAllowColorEl = document.getElementById('stamp-allow-color');
+  var pendingSvgText    = null;
 
   document.getElementById('add-stamp-btn').addEventListener('click', function () {
     rebuildCatSelects();
@@ -1076,18 +1083,20 @@
   });
 
   function clearStampForm() {
-    stampNameEl.value    = '';
-    stampSortEl.value    = '0';
-    stampSvgFileEl.value = '';
+    stampNameEl.value       = '';
+    stampSortEl.value       = '0';
+    stampSvgFileEl.value    = '';
+    stampAllowColorEl.checked = false;
     stampSvgPreview.innerHTML = 'SVGをここに表示';
     pendingSvgText = null;
   }
 
   document.getElementById('submit-stamp-btn').addEventListener('click', function () {
-    var name    = stampNameEl.value.trim();
-    var catId   = stampCatSelEl.value || null;
-    var sort    = parseInt(stampSortEl.value, 10) || 0;
-    var file    = stampSvgFileEl.files[0];
+    var name           = stampNameEl.value.trim();
+    var catId          = stampCatSelEl.value || null;
+    var sort           = parseInt(stampSortEl.value, 10) || 0;
+    var allowColor     = stampAllowColorEl.checked;
+    var file           = stampSvgFileEl.files[0];
 
     if (!name)   { showToast('スタンプ名を入力してください', 'error'); return; }
     if (!file)   { showToast('SVGファイルを選択してください', 'error'); return; }
@@ -1101,7 +1110,7 @@
         if (res.error) { showToast('アップロード失敗: ' + res.error.message, 'error'); return; }
         var urlRes = sb.storage.from('stamps').getPublicUrl(filename);
         var svgUrl = urlRes.data.publicUrl;
-        return sb.from('stamps').insert({ name: name, category_id: catId, svg_url: svgUrl, sort_order: sort });
+        return sb.from('stamps').insert({ name: name, category_id: catId, svg_url: svgUrl, sort_order: sort, allow_color_change: allowColor });
       })
       .then(function (res) {
         if (!res) return; /* アップロード失敗時はskip */

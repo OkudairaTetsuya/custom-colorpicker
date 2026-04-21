@@ -24,7 +24,6 @@
      スタンプ状態
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   var stampState = {
-    color       : '#000000',
     cats        : [],
     stamps      : [],
     currentCatId: null,
@@ -835,9 +834,9 @@
     });
   }
 
-  /* テキスト選択/解除でパネルも更新、スタンプ色ピッカーも同期 */
-  canvas.on('selection:created',  function (e) { refreshLayerList(); syncStampColorPicker(e.selected && e.selected[0]); });
-  canvas.on('selection:updated',  function (e) { refreshLayerList(); syncStampColorPicker(e.selected && e.selected[0]); });
+  /* テキスト選択/解除でパネルも更新 */
+  canvas.on('selection:created',  function () { refreshLayerList(); });
+  canvas.on('selection:updated',  function () { refreshLayerList(); });
   canvas.on('selection:cleared',  function () { refreshLayerList(); });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1188,10 +1187,6 @@
   var stampCatTabsEl  = document.getElementById('stamp-cat-tabs');
   var stampGridEl     = document.getElementById('stamp-grid');
   var stampLoadingEl  = document.getElementById('stamp-loading');
-  var stampColorInput = document.getElementById('stamp-color-input');
-  var stampColorChip  = document.getElementById('stamp-color-chip');
-  var stampColorHex   = document.getElementById('stamp-color-hex');
-  var stampColorRow   = document.getElementById('stamp-color-row');
 
   /* スタンプ＆カテゴリ取得 */
   function loadStamps() {
@@ -1209,7 +1204,6 @@
       renderStampCatTabs();
       renderStampGrid();
       if (stampLoadingEl) stampLoadingEl.style.display = 'none';
-      if (stampState.stamps.length) stampColorRow.style.display = 'flex';
     });
   }
 
@@ -1276,12 +1270,6 @@
     fabric.loadSVGFromURL(stamp.svg_url, function (objects, options) {
       if (!objects || !objects.length) { showError('SVGの読み込みに失敗しました'); return; }
 
-      /* 全パスに色を適用 */
-      objects.forEach(function (obj) {
-        if (obj.fill && obj.fill !== 'none') obj.set('fill', stampState.color);
-        if (obj.stroke && obj.stroke !== 'none') obj.set('stroke', stampState.color);
-      });
-
       var group = fabric.util.groupSVGElements(objects, options);
       var size  = Math.round(CANVAS_W * 0.3); /* キャンバス幅の30% */
       var scale = size / Math.max(group.width, group.height);
@@ -1307,38 +1295,6 @@
       refreshLayerList();
     });
   }
-
-  /* 選択オブジェクトがスタンプならカラーピッカーを同期 */
-  function syncStampColorPicker(obj) {
-    if (!obj || !obj.isStamp) return;
-    /* グループの最初の子から現在色を取得 */
-    var firstObj = obj._objects && obj._objects[0];
-    var col = (firstObj && firstObj.fill && firstObj.fill !== 'none') ? firstObj.fill : stampState.color;
-    setStampColor(col);
-  }
-
-  /* スタンプ色を変更してキャンバス上の選択スタンプにも反映 */
-  function setStampColor(hex) {
-    stampState.color    = hex;
-    stampColorInput.value = hex;
-    stampColorChip.style.background = hex;
-    stampColorHex.textContent = hex.toUpperCase();
-
-    var active = canvas.getActiveObject();
-    if (active && active.isStamp) {
-      active._objects && active._objects.forEach(function (obj) {
-        if (obj.fill   && obj.fill   !== 'none') obj.set('fill',   hex);
-        if (obj.stroke && obj.stroke !== 'none') obj.set('stroke', hex);
-      });
-      active.dirty = true;
-      canvas.renderAll();
-    }
-  }
-
-  /* カラーピッカー操作 */
-  stampColorInput.addEventListener('input', function () {
-    setStampColor(this.value);
-  });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      フッター: ID入力で呼び出し
@@ -1376,7 +1332,7 @@
      モバイル ステップカルーセル
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   var currentStep = 0;
-  var totalSteps  = 5;
+  var totalSteps  = 6;
 
   function goToStep(n) {
     currentStep = Math.max(0, Math.min(totalSteps - 1, n));

@@ -96,14 +96,18 @@
           </button>
           <button class="step-dot" data-step="2">
             <span class="step-dot-num">3</span>
-            <span class="step-dot-label">フォント</span>
+            <span class="step-dot-label">スタンプ</span>
           </button>
           <button class="step-dot" data-step="3">
             <span class="step-dot-num">4</span>
-            <span class="step-dot-label">文字色</span>
+            <span class="step-dot-label">フォント</span>
           </button>
           <button class="step-dot" data-step="4">
             <span class="step-dot-num">5</span>
+            <span class="step-dot-label">文字色</span>
+          </button>
+          <button class="step-dot" data-step="5">
+            <span class="step-dot-num">6</span>
             <span class="step-dot-label">配置</span>
           </button>
         </div>
@@ -203,34 +207,34 @@
                   <!-- JS で動的生成 -->
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
 
-              <!-- スタンプピッカー -->
+        <!-- ステップ 3: スタンプ -->
+        <div class="card step-card" data-step-idx="2" id="step-card-stamp">
+          <button class="ac-header pc-ac-header" data-target="step-body-stamp">
+            <span class="ac-title"><span class="ac-num">3</span>🖼 スタンプ</span>
+            <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="step-body" id="step-body-stamp">
+            <div class="step-inner">
               <div class="stamp-picker" id="stamp-picker">
-                <p class="layer-panel-title">スタンプ</p>
                 <!-- カテゴリタブ -->
                 <div class="stamp-cat-tabs" id="stamp-cat-tabs">
                   <p class="stamp-loading" id="stamp-loading">読み込み中…</p>
                 </div>
                 <!-- スタンプグリッド -->
                 <div class="stamp-grid" id="stamp-grid"></div>
-                <!-- スタンプ色 -->
-                <div class="stamp-color-row" id="stamp-color-row" style="display:none;">
-                  <span class="ctrl-label">スタンプ色</span>
-                  <label class="stamp-color-chip-wrap">
-                    <input type="color" id="stamp-color-input" value="#000000" class="stamp-color-input">
-                    <span class="stamp-color-chip" id="stamp-color-chip" style="background:#000000;"></span>
-                  </label>
-                  <code class="hex-code" id="stamp-color-hex">#000000</code>
-                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ステップ 3: フォント -->
-        <div class="card step-card" data-step-idx="2" id="step-card-2">
+        <!-- ステップ 4: フォント -->
+        <div class="card step-card" data-step-idx="3" id="step-card-2">
           <button class="ac-header pc-ac-header" data-target="step-body-2">
-            <span class="ac-title"><span class="ac-num">3</span>フォント・サイズ</span>
+            <span class="ac-title"><span class="ac-num">4</span>フォント・サイズ</span>
             <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="step-body" id="step-body-2">
@@ -265,10 +269,10 @@
           </div>
         </div>
 
-        <!-- ステップ 4: 文字色 -->
-        <div class="card step-card" data-step-idx="3" id="step-card-3">
+        <!-- ステップ 5: 文字色 -->
+        <div class="card step-card" data-step-idx="4" id="step-card-3">
           <button class="ac-header pc-ac-header" data-target="step-body-3">
-            <span class="ac-title"><span class="ac-num">4</span>文字色</span>
+            <span class="ac-title"><span class="ac-num">5</span>文字色</span>
             <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="step-body" id="step-body-3">
@@ -292,10 +296,10 @@
           </div>
         </div>
 
-        <!-- ステップ 5: 配置 -->
-        <div class="card step-card" data-step-idx="4" id="step-card-4">
+        <!-- ステップ 6: 配置 -->
+        <div class="card step-card" data-step-idx="5" id="step-card-4">
           <button class="ac-header pc-ac-header" data-target="step-body-4">
-            <span class="ac-title"><span class="ac-num">5</span>配置・回転</span>
+            <span class="ac-title"><span class="ac-num">6</span>配置・回転</span>
             <svg class="ac-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="step-body" id="step-body-4">
@@ -322,7 +326,7 @@
         <!-- モバイル: ステップナビゲーション -->
         <div class="step-nav" id="step-nav">
           <button id="step-prev-btn" class="step-nav-btn" disabled>← 戻る</button>
-          <span class="step-counter" id="step-counter">1 / 5</span>
+          <span class="step-counter" id="step-counter">1 / 6</span>
           <button id="step-next-btn" class="step-nav-btn step-nav-next">次へ →</button>
         </div>
 
@@ -380,6 +384,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chroma-js@2.6.0/chroma.min.js"></script>
   <script src="supabase.config.js"></script>
-  <script src="script_nameprint.js?v=20260416a"></script>
+  <script src="script_nameprint.js?v=20260421a"></script>
 </body>
 </html>

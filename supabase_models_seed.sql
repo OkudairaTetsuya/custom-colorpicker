@@ -7,12 +7,9 @@
 ALTER TABLE case_models
   ADD COLUMN IF NOT EXISTS brand TEXT NOT NULL DEFAULT '';
 
--- 2) 旧サンプルデータを削除（スラグが画像ファイルと一致しない分）
-DELETE FROM case_models
-  WHERE slug IN (
-    'iphone-15','iphone-15-pro','iphone-15-plus',
-    'iphone-14','galaxy-s24'
-  );
+-- 2) designs の model_id 参照を先に外してから case_models を全削除
+UPDATE designs SET model_id = NULL WHERE model_id IS NOT NULL;
+DELETE FROM case_models;
 
 -- 3) 正しいデータを挿入（slug は images/{slug}_BLK.png のファイル名と一致させること）
 INSERT INTO case_models (brand, name, slug, width_mm, height_mm) VALUES
@@ -50,9 +47,4 @@ INSERT INTO case_models (brand, name, slug, width_mm, height_mm) VALUES
   ('Arrows', 'arrows We2',       'f-We2',     74.0, 160.0),
   ('Arrows', 'arrows We2 Plus',  'f-We2Plus', 74.0, 162.0),
   -- ── Kyocera ──────────────────────────────────────────────────
-  ('Kyocera', 'Kyocera Android One', 'k-Active', 70.0, 146.0)
-ON CONFLICT (slug) DO UPDATE SET
-  brand     = EXCLUDED.brand,
-  name      = EXCLUDED.name,
-  width_mm  = EXCLUDED.width_mm,
-  height_mm = EXCLUDED.height_mm;
+  ('Kyocera', 'Kyocera Android One', 'k-Active', 70.0, 146.0);

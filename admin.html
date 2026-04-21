@@ -198,6 +198,10 @@
               <div class="svg-preview" id="stamp-svg-preview">SVGをここに表示</div>
             </div>
           </label>
+          <label class="form-field form-field-full" style="flex-direction:row;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="stamp-allow-color" style="width:16px;height:16px;cursor:pointer;">
+            <span>色変更を許可する（単色SVG向け）</span>
+          </label>
         </div>
         <div class="add-form-actions">
           <button class="btn-primary" id="submit-stamp-btn">追加する</button>
@@ -213,6 +217,7 @@
               <th>スタンプ名</th>
               <th style="width:120px">カテゴリ</th>
               <th style="width:70px">並び順</th>
+              <th style="width:80px">色変更</th>
               <th style="width:100px">操作</th>
             </tr>
           </thead>
