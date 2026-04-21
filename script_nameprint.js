@@ -938,12 +938,12 @@
      ユーティリティ
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   function generateId() {
-    /* 見間違えやすい文字（0/o/1/l/i）を除いた英小文字＋数字 20文字 */
-    var chars = 'abcdefghjkmnpqrstuvwxyz23456789';
-    var arr   = new Uint8Array(20);
+    /* 先頭 "sIm" 固定 + ランダム17文字 = 計20文字 */
+    var chars  = 'abcdefghjkmnpqrstuvwxyz23456789';
+    var arr    = new Uint8Array(17);
     crypto.getRandomValues(arr);
-    var result = '';
-    for (var i = 0; i < 20; i++) {
+    var result = 'sIm';
+    for (var i = 0; i < 17; i++) {
       result += chars[arr[i] % chars.length];
     }
     return result;
