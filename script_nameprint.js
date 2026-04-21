@@ -1456,7 +1456,7 @@
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      PC アコーディオン（step-body）
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  var stepBodyIds = ['step-body-0','step-body-1','step-body-2','step-body-3','step-body-4'];
+  var stepBodyIds = ['step-body-0','step-body-1','step-body-2','step-body-3','step-body-4','step-body-stamp'];
 
   function openStepBody(targetId) {
     var body   = document.getElementById(targetId);
