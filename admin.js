@@ -661,7 +661,8 @@
 
   /* SVG後処理:
      - width/height を mm 単位に書き換え
-     - viewBox を 0 0 W H に正規化（上部余白の除去）
+     - viewBox はキャンバス実寸のまま（スケール変更なし）
+     - 上部余白分だけ translate で全コンテンツを上にずらす
      - clipPath でキャンバス外へのはみ出しをマスク
   */
   function processSvg(svgStr, wMm, hMm, topOffsetMm) {
@@ -670,21 +671,39 @@
     var svgEl  = doc.querySelector('svg');
     if (!svgEl) return svgStr;
 
-    /* 設計キャンバスは常に CANVAS_W × CANVAS_H で固定 */
-    var pxW = CANVAS_W;
-    var pxH = CANVAS_H;
+    /* Fabric が出力した実際のキャンバスサイズを viewBox から取得 */
+    var vb  = (svgEl.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+    var pxW = (vb.length >= 4 && vb[2] > 0) ? vb[2] : CANVAS_W;
+    var pxH = (vb.length >= 4 && vb[3] > 0) ? vb[3] : CANVAS_H;
 
-    /* 上部オフセット: フレーム画像の非印刷エリア分を viewBox y 起点でカット
-       offsetPx = topOffsetMm / hMm * pxH
-       → viewBox "0 offsetPx pxW (pxH - offsetPx)" にすることで
-         canvas の offsetPx 以降が mm 寸法にマッピングされ位置が一致する */
+    /* 上部オフセット: フレーム画像の非印刷エリア分（mm → px）
+       コンテンツを offsetPx 分上にずらすことで canvas y=offsetPx が物理 0mm に一致
+       viewBox 高さは変えないのでスケール（X/Y 等倍）が保たれる */
     var offsetPx = topOffsetMm ? Math.round((topOffsetMm / hMm) * pxH) : 0;
 
     svgEl.setAttribute('width',               wMm + 'mm');
     svgEl.setAttribute('height',              hMm + 'mm');
-    svgEl.setAttribute('viewBox',             '0 ' + offsetPx + ' ' + pxW + ' ' + (pxH - offsetPx));
+    svgEl.setAttribute('viewBox',             '0 0 ' + pxW + ' ' + pxH);
     svgEl.setAttribute('preserveAspectRatio', 'none');
     svgEl.removeAttribute('overflow');
+
+    /* defs・desc 以外の直接子を translate グループでまとめてオフセット適用 */
+    if (offsetPx > 0) {
+      var toMove = [];
+      Array.from(svgEl.childNodes).forEach(function (node) {
+        if (node.nodeType !== 1) return;
+        var tag = node.tagName.toLowerCase();
+        if (tag === 'defs' || tag === 'desc') return;
+        toMove.push(node);
+      });
+      var g = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('transform', 'translate(0,' + (-offsetPx) + ')');
+      toMove.forEach(function (child) {
+        svgEl.removeChild(child);
+        g.appendChild(child);
+      });
+      svgEl.appendChild(g);
+    }
 
     return new XMLSerializer().serializeToString(doc);
   }
@@ -701,9 +720,8 @@
     if (!svgEl) return svgStr;
 
     /* processSvg が正規化した viewBox から寸法を読み取る
-       viewBox = "0 offsetPx pxW (pxH - offsetPx)" 形式 */
+       viewBox = "0 0 pxW pxH" 形式（translate でオフセット済みのため y=0 固定） */
     var vb     = (svgEl.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
-    var vbY    = (vb.length >= 4) ? vb[1] : 0;
     var pxW    = (vb.length >= 4 && vb[2] > 0) ? vb[2] : CANVAS_W;
     var pxH    = (vb.length >= 4 && vb[3] > 0) ? vb[3] : CANVAS_H;
 
@@ -721,9 +739,9 @@
     var cp = doc.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
     cp.setAttribute('id', 'canvas-clip');
     var cr = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    cr.setAttribute('x', '0'); cr.setAttribute('y', String(vbY));
+    cr.setAttribute('x', '0'); cr.setAttribute('y', '0');
     cr.setAttribute('width',  String(pxW));
-    cr.setAttribute('height', String(pxH));  /* pxH = viewBox の height 値 = offsetPx 除去済み */
+    cr.setAttribute('height', String(pxH));
     cp.appendChild(cr);
     defs.appendChild(cp);
 
@@ -775,9 +793,12 @@
       if (hasEmoji) {
         if (!confirm('このデザインには絵文字が含まれています。\n絵文字は opentype.js でパス化できないため SVG に正しく出力されません。\n\nそのまま出力しますか？')) return;
       }
-      /* 出力キャンバスは常に設計時と同じ CANVAS_W×CANVAS_H を使用
-         → オブジェクト座標が 300px 基準で保存されているため、幅を変えると水平位置がズレる
-         → mm 変換は processSvg の viewBox × preserveAspectRatio="none" で対応 */
+      /* キャンバス幅を mm アスペクト比から計算
+         → X/Y スケールを一致させることで伸縮なし（preserveAspectRatio="none" でも等倍）*/
+      if (model.widthMm && model.heightMm) {
+        savedCanvasH = CANVAS_H;
+        savedCanvasW = Math.round(CANVAS_H * model.widthMm / model.heightMm);
+      }
     } catch (e) { /* JSON解析失敗は無視して続行 */ }
 
     showToast('SVG を生成中…');
