@@ -1299,15 +1299,32 @@
   color     : #fff;
 }
 
-/* スタンプグリッド */
+/* スタンプグリッド（横スクロール） */
+.stamp-scroll-wrap {
+  container-type : inline-size;
+  overflow-x     : auto;
+  overflow-y     : hidden;
+  margin-bottom  : 12px;
+  padding-bottom : 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.stamp-scroll-wrap::-webkit-scrollbar {
+  height: 4px;
+}
+.stamp-scroll-wrap::-webkit-scrollbar-thumb {
+  background   : var(--border);
+  border-radius: 2px;
+}
 .stamp-grid {
-  display              : grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap                  : 8px;
-  margin-bottom        : 12px;
+  display             : grid;
+  grid-template-rows  : repeat(3, calc((100cqi - 8px * 3) / 4.5));
+  grid-auto-flow      : column;
+  grid-auto-columns   : calc((100cqi - 8px * 3) / 4.5);
+  gap                 : 8px;
+  width               : max-content;
 }
 .stamp-item {
-  aspect-ratio : 1;
   border        : 1.5px solid var(--border);
   border-radius : 10px;
   background    : #fafafa;
@@ -1330,10 +1347,9 @@
 }
 .stamp-empty,
 .stamp-loading {
-  grid-column: 1 / -1;
-  font-size  : 12px;
-  color      : var(--muted);
-  padding    : 8px 0;
+  font-size: 12px;
+  color    : var(--muted);
+  padding  : 8px 0;
 }
 
 /* スタンプ色行 */
