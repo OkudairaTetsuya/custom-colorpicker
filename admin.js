@@ -9,8 +9,9 @@
   var CANVAS_W = 300;
   var CANVAS_H = 600;
 
-  /* SVG出力時の上部オフセット（フレーム画像の非印刷エリア分） */
-  var EXPORT_TOP_OFFSET_MM = 25;
+  /* SVG出力時の上部オフセット
+     フレーム画像はキャンバス全体（top=0）にフィットしているため不要（= 0） */
+  var EXPORT_TOP_OFFSET_MM = 0;
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      Supabase クライアント
