@@ -279,6 +279,17 @@ body {
   color: var(--text);
   flex: 1;
   text-align: right;
+  /* input リセット */
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 0;
+  width: 0;
+  min-width: 0;
+  cursor: text;
+}
+.hex-code:focus {
+  color: var(--accent, #3B82F6);
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━

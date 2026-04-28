@@ -523,7 +523,7 @@
     canvas.backgroundColor = gamut.isPrint ? gamut.printHex : hex;
     canvas.renderAll();
     hexChip.style.backgroundColor = hex;
-    hexCode.textContent = hex;
+    hexCode.value = hex;
 
     /* ガマット判定（デバウンス：ドラッグ中は重くならないよう遅延） */
     debouncedGamutCheck(hex);
@@ -549,6 +549,15 @@
   hueSlider.addEventListener('input', function () {
     bgHue = parseInt(this.value, 10); renderBg();
   });
+  hexCode.addEventListener('change', function () {
+    var val = this.value.trim().toUpperCase();
+    if (/^[0-9A-F]{6}$/.test(val)) val = '#' + val;
+    if (!/^#[0-9A-F]{6}$/.test(val)) { renderBg(); return; }
+    var hsv = hexToHsv(val);
+    bgHue = hsv[0]; bgSat = hsv[1]; bgVal = hsv[2];
+    hueSlider.value = Math.round(bgHue);
+    renderBg();
+  });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      文字色 ピッカー
@@ -564,7 +573,7 @@
     var rgb = hsvToRgb(tcHue, tcSat, tcVal);
     var hex = rgbToHex(rgb[0], rgb[1], rgb[2]).toUpperCase();
     tcHexChip.style.backgroundColor = hex;
-    tcHexCode.textContent = hex;
+    tcHexCode.value = hex;
 
     if (activeText) {
       activeText.set('fill', hex);
@@ -586,6 +595,15 @@
   }, { passive: false });
   tcHueSl.addEventListener('input', function () {
     tcHue = parseInt(this.value, 10); renderTc();
+  });
+  tcHexCode.addEventListener('change', function () {
+    var val = this.value.trim().toUpperCase();
+    if (/^[0-9A-F]{6}$/.test(val)) val = '#' + val;
+    if (!/^#[0-9A-F]{6}$/.test(val)) { renderTc(); return; }
+    var hsv = hexToHsv(val);
+    tcHue = hsv[0]; tcSat = hsv[1]; tcVal = hsv[2];
+    tcHueSl.value = Math.round(tcHue);
+    renderTc();
   });
 
   /* 共通ドラッグ解放 */
@@ -1212,7 +1230,7 @@
 
           var bgHex = (data.base_color || '#FFFFFF').toUpperCase();
           hexChip.style.backgroundColor = bgHex;
-          hexCode.textContent            = bgHex;
+          hexCode.value                  = bgHex;
           var bgHsv = hexToHsv(bgHex);
           bgHue = bgHsv[0]; bgSat = bgHsv[1]; bgVal = bgHsv[2];
           hueSlider.value = Math.round(bgHue);
@@ -1220,7 +1238,7 @@
 
           var tcHex = (data.text_color || '#000000').toUpperCase();
           tcHexChip.style.backgroundColor = tcHex;
-          tcHexCode.textContent            = tcHex;
+          tcHexCode.value                  = tcHex;
           var tcHsv = hexToHsv(tcHex);
           tcHue = tcHsv[0]; tcSat = tcHsv[1]; tcVal = tcHsv[2];
           tcHueSl.value = Math.round(tcHue);
