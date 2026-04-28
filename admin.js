@@ -81,8 +81,9 @@
         document.querySelectorAll('.tab-pane').forEach(function (p) {
           p.style.display = p.id === 'tab-' + tab ? 'block' : 'none';
         });
-        if (tab === 'models') loadModels();
-        if (tab === 'stamps') loadStampTab();
+        if (tab === 'models')        loadModels();
+        if (tab === 'stamps')        loadStampTab();
+        if (tab === 'color-presets') loadColorPresetTab();
       });
     });
   }
@@ -1180,6 +1181,160 @@
         loadStamps();
       });
   });
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     カラープリセット管理
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var cachedPresetCats   = [];
+  var cachedColorPresets = [];
+  var presetCatsTbody    = document.getElementById('preset-cats-tbody');
+  var presetCatsEmpty    = document.getElementById('preset-cats-empty');
+  var presetsTbody       = document.getElementById('presets-tbody');
+  var presetsEmpty       = document.getElementById('presets-empty');
+
+  function loadColorPresetTab() { loadPresetCats(true); }
+
+  function loadPresetCats(thenPresets) {
+    sb.from('color_preset_categories').select('*').order('sort_order')
+      .then(function (res) {
+        if (res.error) { showToast('カテゴリ取得失敗: ' + res.error.message, 'error'); return; }
+        cachedPresetCats = res.data || [];
+        presetCatsTbody.innerHTML = '';
+        presetCatsEmpty.style.display = cachedPresetCats.length ? 'none' : 'block';
+        cachedPresetCats.forEach(function (c) { presetCatsTbody.appendChild(buildPresetCatRow(c)); });
+        if (thenPresets) loadColorPresets();
+      });
+  }
+
+  function loadColorPresets() {
+    sb.from('color_presets').select('*').order('sort_order')
+      .then(function (res) {
+        if (res.error) { showToast('プリセット取得失敗: ' + res.error.message, 'error'); return; }
+        cachedColorPresets = res.data || [];
+        presetsTbody.innerHTML = '';
+        presetsEmpty.style.display = cachedColorPresets.length ? 'none' : 'block';
+        cachedColorPresets.forEach(function (p) { presetsTbody.appendChild(buildPresetRow(p)); });
+      });
+  }
+
+  function buildPresetCatRow(c) {
+    var tr = document.createElement('tr');
+    var chip = document.createElement('span');
+    chip.className = 'tag-chip'; chip.style.background = c.tag_color || '#6366f1';
+    var tdColor = document.createElement('td'); tdColor.appendChild(chip);
+    var tdName  = eCell(c.name,       'name');
+    var tdSort  = eCell(c.sort_order, 'sort_order', 'number');
+    var tdAct   = document.createElement('td');
+    var saveBtn = btn('保存', 'btn-sm');
+    saveBtn.addEventListener('click', function () {
+      var updates = {};
+      [tdName, tdSort].forEach(function (td) {
+        var input = td.querySelector('input');
+        if (input) updates[td.dataset.field] = input.type === 'number' ? parseInt(input.value,10)||0 : input.value.trim();
+      });
+      sb.from('color_preset_categories').update(updates).eq('id', c.id)
+        .then(function (res) {
+          if (res.error) { showToast('更新失敗: ' + res.error.message, 'error'); return; }
+          showToast('更新しました'); loadPresetCats(true);
+        });
+    });
+    var delBtn2 = btn('削除', 'btn-sm btn-danger');
+    delBtn2.addEventListener('click', function () {
+      if (!confirm(c.name + ' を削除しますか？')) return;
+      sb.from('color_preset_categories').delete().eq('id', c.id)
+        .then(function (res) {
+          if (res.error) { showToast('削除失敗: ' + res.error.message, 'error'); return; }
+          showToast(c.name + ' を削除しました'); loadPresetCats(true);
+        });
+    });
+    tdAct.appendChild(saveBtn); tdAct.appendChild(delBtn2);
+    tr.append(tdColor, tdName, tdSort, tdAct);
+    return tr;
+  }
+
+  function buildPresetRow(p) {
+    var tr = document.createElement('tr');
+    var swatch = document.createElement('span');
+    swatch.className = 'swatch'; swatch.style.background = p.hex;
+    var tdSwatch = document.createElement('td'); tdSwatch.appendChild(swatch);
+    var tdName   = eCell(p.name,       'name');
+    var tdHex    = eCell(p.hex,        'hex');
+    var tdSort   = eCell(p.sort_order, 'sort_order', 'number');
+
+    var tdCat  = document.createElement('td');
+    var catSel = document.createElement('select');
+    catSel.className = 'ei';
+    cachedPresetCats.forEach(function (c) {
+      var o = document.createElement('option');
+      o.value = c.id; o.textContent = c.name;
+      if (c.id === p.category_id) o.selected = true;
+      catSel.appendChild(o);
+    });
+    tdCat.appendChild(catSel);
+
+    var tdAct   = document.createElement('td');
+    var saveBtn = btn('保存', 'btn-sm');
+    saveBtn.addEventListener('click', function () {
+      var updates = { category_id: catSel.value || null };
+      [tdName, tdHex, tdSort].forEach(function (td) {
+        var input = td.querySelector('input');
+        if (input) updates[td.dataset.field] = input.type === 'number' ? parseInt(input.value,10)||0 : input.value.trim();
+      });
+      sb.from('color_presets').update(updates).eq('id', p.id)
+        .then(function (res) {
+          if (res.error) { showToast('更新失敗: ' + res.error.message, 'error'); return; }
+          swatch.style.background = updates.hex || p.hex;
+          showToast('更新しました');
+        });
+    });
+    var delBtn2 = btn('削除', 'btn-sm btn-danger');
+    delBtn2.addEventListener('click', function () {
+      if (!confirm((p.name || p.hex) + ' を削除しますか？')) return;
+      sb.from('color_presets').delete().eq('id', p.id)
+        .then(function (res) {
+          if (res.error) { showToast('削除失敗: ' + res.error.message, 'error'); return; }
+          showToast('削除しました'); loadColorPresets();
+        });
+    });
+    tdAct.appendChild(saveBtn); tdAct.appendChild(delBtn2);
+    tr.append(tdSwatch, tdName, tdHex, tdCat, tdSort, tdAct);
+    return tr;
+  }
+
+  document.getElementById('add-preset-cat-btn').addEventListener('click', function () {
+    var name  = prompt('カテゴリ名');
+    if (!name) return;
+    var color = prompt('タグ色（HEX）', '#6366f1') || '#6366f1';
+    sb.from('color_preset_categories')
+      .insert({ name: name.trim(), tag_color: color, sort_order: cachedPresetCats.length * 10 })
+      .then(function (res) {
+        if (res.error) { showToast('追加失敗: ' + res.error.message, 'error'); return; }
+        showToast(name + ' を追加しました'); loadPresetCats(true);
+      });
+  });
+  document.getElementById('refresh-preset-cats-btn').addEventListener('click', function () { loadPresetCats(true); });
+
+  document.getElementById('add-preset-btn').addEventListener('click', function () {
+    if (!cachedPresetCats.length) { showToast('先にカテゴリを作成してください', 'error'); return; }
+    var hex = prompt('HEXカラー（例: #FF5733）');
+    if (!hex) return;
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex.trim())) { showToast('正しいHEX形式で入力（例: #FF5733）', 'error'); return; }
+    hex = hex.trim().toUpperCase();
+    var name  = prompt('色の名前（任意）', '') || '';
+    var catId = cachedPresetCats[0].id;
+    if (cachedPresetCats.length > 1) {
+      var choices = cachedPresetCats.map(function (c, i) { return (i + 1) + ': ' + c.name; }).join('\n');
+      var idx = parseInt(prompt('カテゴリ番号\n' + choices), 10);
+      if (idx >= 1 && idx <= cachedPresetCats.length) catId = cachedPresetCats[idx - 1].id;
+    }
+    sb.from('color_presets')
+      .insert({ hex: hex, name: name, category_id: catId, sort_order: cachedColorPresets.length * 10 })
+      .then(function (res) {
+        if (res.error) { showToast('追加失敗: ' + res.error.message, 'error'); return; }
+        showToast(hex + ' を追加しました'); loadColorPresets();
+      });
+  });
+  document.getElementById('refresh-presets-btn').addEventListener('click', function () { loadColorPresets(); });
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
      初期化

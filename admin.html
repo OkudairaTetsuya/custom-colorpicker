@@ -31,6 +31,7 @@
         <button class="tab-btn active" data-tab="designs">デザイン一覧</button>
         <button class="tab-btn" data-tab="models">機種マスター</button>
         <button class="tab-btn" data-tab="stamps">スタンプ管理</button>
+        <button class="tab-btn" data-tab="color-presets">カラープリセット</button>
       </nav>
       <button id="logout-btn" class="logout-btn">ログアウト</button>
     </header>
@@ -229,6 +230,51 @@
 
     </div><!-- /#tab-stamps -->
 
+    <!-- ── カラープリセットタブ ── -->
+    <div id="tab-color-presets" class="tab-pane" style="display:none;">
+
+      <!-- カテゴリ管理 -->
+      <div class="section-header">
+        <h2 class="section-title">カテゴリ</h2>
+        <button class="btn-sm" id="add-preset-cat-btn">＋ カテゴリ追加</button>
+        <button class="btn-sm" id="refresh-preset-cats-btn">更新</button>
+      </div>
+      <div class="table-scroll">
+        <table class="admin-table" id="preset-cats-table">
+          <thead><tr>
+            <th style="width:60px">タグ色</th>
+            <th>名前</th>
+            <th style="width:80px">並び順</th>
+            <th style="width:120px">操作</th>
+          </tr></thead>
+          <tbody id="preset-cats-tbody"></tbody>
+        </table>
+      </div>
+      <p class="empty-msg" id="preset-cats-empty" style="display:none;">カテゴリがありません</p>
+
+      <!-- プリセット色管理 -->
+      <div class="section-header" style="margin-top:24px;">
+        <h2 class="section-title">プリセット色</h2>
+        <button class="btn-sm" id="add-preset-btn">＋ 色を追加</button>
+        <button class="btn-sm" id="refresh-presets-btn">更新</button>
+      </div>
+      <div class="table-scroll">
+        <table class="admin-table" id="presets-table">
+          <thead><tr>
+            <th style="width:56px">色</th>
+            <th>名前</th>
+            <th>HEX</th>
+            <th>カテゴリ</th>
+            <th style="width:80px">並び順</th>
+            <th style="width:120px">操作</th>
+          </tr></thead>
+          <tbody id="presets-tbody"></tbody>
+        </table>
+      </div>
+      <p class="empty-msg" id="presets-empty" style="display:none;">プリセット色がありません</p>
+
+    </div><!-- /#tab-color-presets -->
+
   </div><!-- /.admin-screen -->
 
   <!-- トースト通知 -->
@@ -238,6 +284,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
   <script src="supabase.config.js"></script>
-  <script src="admin.js?v=20260427a"></script>
+  <script src="admin.js?v=20260428a"></script>
 </body>
 </html>

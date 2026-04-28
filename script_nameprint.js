@@ -1266,6 +1266,69 @@
   }
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     カラープリセット
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var colorPresetState = { cats: [], presets: [], currentCatId: null };
+  var presetCatTabsEl  = document.getElementById('color-preset-cat-tabs');
+  var presetGridEl     = document.getElementById('color-preset-grid');
+  var presetLoadingEl  = document.getElementById('color-preset-loading');
+
+  function loadColorPresets() {
+    if (!supabaseClient) { if (presetLoadingEl) presetLoadingEl.style.display = 'none'; return; }
+    Promise.all([
+      supabaseClient.from('color_preset_categories').select('*').order('sort_order'),
+      supabaseClient.from('color_presets').select('*').order('sort_order'),
+    ]).then(function (results) {
+      if (results[0].error || results[1].error) { if (presetLoadingEl) presetLoadingEl.style.display = 'none'; return; }
+      colorPresetState.cats    = results[0].data || [];
+      colorPresetState.presets = results[1].data || [];
+      colorPresetState.currentCatId = colorPresetState.cats.length ? colorPresetState.cats[0].id : null;
+      if (presetLoadingEl) presetLoadingEl.style.display = 'none';
+      renderColorPresetTabs();
+      renderColorPresetGrid();
+    });
+  }
+
+  function renderColorPresetTabs() {
+    presetCatTabsEl.innerHTML = '';
+    if (!colorPresetState.cats.length) return;
+    colorPresetState.cats.forEach(function (cat) {
+      var btn = document.createElement('button');
+      btn.type        = 'button';
+      btn.className   = 'color-preset-cat-btn' + (cat.id === colorPresetState.currentCatId ? ' active' : '');
+      btn.textContent = cat.name;
+      btn.style.setProperty('--cat-color', cat.tag_color || '#6366f1');
+      btn.addEventListener('click', function () {
+        colorPresetState.currentCatId = cat.id;
+        renderColorPresetTabs();
+        renderColorPresetGrid();
+      });
+      presetCatTabsEl.appendChild(btn);
+    });
+  }
+
+  function renderColorPresetGrid() {
+    presetGridEl.innerHTML = '';
+    var filtered = colorPresetState.presets.filter(function (p) {
+      return p.category_id === colorPresetState.currentCatId;
+    });
+    filtered.forEach(function (preset) {
+      var btn = document.createElement('button');
+      btn.type      = 'button';
+      btn.className = 'color-preset-swatch';
+      btn.style.background = preset.hex;
+      btn.title     = preset.name || preset.hex;
+      btn.addEventListener('click', function () {
+        var hsv = hexToHsv(preset.hex);
+        bgHue = hsv[0]; bgSat = hsv[1]; bgVal = hsv[2];
+        hueSlider.value = Math.round(bgHue);
+        renderBg();
+      });
+      presetGridEl.appendChild(btn);
+    });
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      スタンプ機能
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   var stampCatTabsEl  = document.getElementById('stamp-cat-tabs');
@@ -1534,6 +1597,8 @@
 
   /* 機種リスト読み込み */
   loadModelList();
+  /* カラープリセット読み込み */
+  loadColorPresets();
   /* スタンプ読み込み */
   loadStamps();
   /* レイヤーパネル初期表示 */

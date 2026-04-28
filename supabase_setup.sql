@@ -82,7 +82,40 @@ INSERT INTO case_models (name, slug, width_mm, height_mm, sort_order) VALUES
 ON CONFLICT (slug) DO NOTHING;
 
 
--- ── 5. 古いデータの自動削除（オプション / 30日後） ─────────
+-- ── 5. color_preset_categories テーブル ────────────────────
+CREATE TABLE IF NOT EXISTS color_preset_categories (
+  id         UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
+  name       TEXT         NOT NULL,
+  sort_order INTEGER      NOT NULL DEFAULT 0,
+  tag_color  TEXT         NOT NULL DEFAULT '#6366f1',
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+ALTER TABLE color_preset_categories ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_select_color_preset_categories" ON color_preset_categories FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_insert_color_preset_categories" ON color_preset_categories FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "anon_update_color_preset_categories" ON color_preset_categories FOR UPDATE TO anon USING (true);
+CREATE POLICY "anon_delete_color_preset_categories" ON color_preset_categories FOR DELETE TO anon USING (true);
+
+
+-- ── 6. color_presets テーブル ────────────────────────────────
+CREATE TABLE IF NOT EXISTS color_presets (
+  id          UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
+  category_id UUID         REFERENCES color_preset_categories(id) ON DELETE CASCADE,
+  name        TEXT         NOT NULL DEFAULT '',
+  hex         TEXT         NOT NULL,
+  sort_order  INTEGER      NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+ALTER TABLE color_presets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_select_color_presets" ON color_presets FOR SELECT TO anon USING (true);
+CREATE POLICY "anon_insert_color_presets" ON color_presets FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "anon_update_color_presets" ON color_presets FOR UPDATE TO anon USING (true);
+CREATE POLICY "anon_delete_color_presets" ON color_presets FOR DELETE TO anon USING (true);
+
+
+-- ── 7. 古いデータの自動削除（オプション / 30日後） ─────────
 -- CREATE EXTENSION IF NOT EXISTS pg_cron;
 -- SELECT cron.schedule('cleanup_old_designs', '0 3 * * *',
 --   $$DELETE FROM designs WHERE created_at < now() - INTERVAL '30 days'$$);
