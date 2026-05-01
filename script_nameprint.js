@@ -1273,6 +1273,23 @@
   var presetGridEl     = document.getElementById('color-preset-grid');
   var presetLoadingEl  = document.getElementById('color-preset-loading');
 
+  /* カラーモードタブ切り替え */
+  var colorSectionPreset = document.getElementById('color-section-preset');
+  var colorSectionFree   = document.getElementById('color-section-free');
+  document.querySelectorAll('.color-mode-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.color-mode-tab').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      if (tab.dataset.mode === 'preset') {
+        colorSectionPreset.classList.remove('hidden');
+        colorSectionFree.classList.add('hidden');
+      } else {
+        colorSectionPreset.classList.add('hidden');
+        colorSectionFree.classList.remove('hidden');
+      }
+    });
+  });
+
   function loadColorPresets() {
     if (!supabaseClient) { if (presetLoadingEl) presetLoadingEl.style.display = 'none'; return; }
     Promise.all([

@@ -122,15 +122,6 @@
           </button>
           <div class="step-body" id="step-body-0">
             <div class="step-inner">
-              <!-- ケース本体カラー -->
-              <div class="color-preset-wrap" id="color-preset-wrap">
-                <div class="color-preset-cat-tabs" id="color-preset-cat-tabs">
-                  <p class="color-preset-loading" id="color-preset-loading">読み込み中…</p>
-                </div>
-                <div class="color-preset-grid-wrap">
-                  <div class="color-preset-grid" id="color-preset-grid"></div>
-                </div>
-              </div>
               <div class="case-color-row">
                 <span class="ctrl-label">ケース素材</span>
                 <div class="color-toggle">
@@ -142,15 +133,30 @@
                   </button>
                 </div>
               </div>
-              <!-- 色相スライダー（上） -->
-              <div class="row-hue" style="margin-bottom:12px;">
-                <div class="hue-track" style="flex:1;">
-                  <input type="range" id="hue-slider" class="hue-slider" min="0" max="360" value="0" step="1" aria-label="色相">
+              <!-- カラー選択モード切り替え -->
+              <div class="color-mode-tabs">
+                <button type="button" class="color-mode-tab active" data-mode="preset">くすみカラーから選ぶ</button>
+                <button type="button" class="color-mode-tab" data-mode="free">自由にカラーを設定する</button>
+              </div>
+              <!-- Section: プリセット -->
+              <div class="color-section" id="color-section-preset">
+                <div class="color-preset-cat-tabs" id="color-preset-cat-tabs">
+                  <p class="color-preset-loading" id="color-preset-loading">読み込み中…</p>
+                </div>
+                <div class="color-preset-grid-wrap">
+                  <div class="color-preset-grid" id="color-preset-grid"></div>
                 </div>
               </div>
-              <!-- SV マップ（下） -->
-              <div class="sv-map" id="sv-map">
-                <div class="sv-cursor" id="sv-cursor"></div>
+              <!-- Section: 自由設定 -->
+              <div class="color-section hidden" id="color-section-free">
+                <div class="row-hue" style="margin-bottom:12px;">
+                  <div class="hue-track" style="flex:1;">
+                    <input type="range" id="hue-slider" class="hue-slider" min="0" max="360" value="0" step="1" aria-label="色相">
+                  </div>
+                </div>
+                <div class="sv-map" id="sv-map">
+                  <div class="sv-cursor" id="sv-cursor"></div>
+                </div>
               </div>
               <!-- HEX 表示（コピーボタンなし） -->
               <div class="row-hex" style="margin-top:8px;">
